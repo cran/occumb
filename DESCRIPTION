@@ -1,6 +1,6 @@
 Package: occumb
 Title: Site Occupancy Modeling for Environmental DNA Metabarcoding
-Version: 1.0.2
+Version: 1.0.3
 Authors@R: c(
     person("Keiichi", "Fukaya", , "fukayak99@gmail.com", role = c("aut", "cre")),
     person("Ken", "Kellner", role = "cph",
@@ -29,9 +29,9 @@ SystemRequirements: JAGS (http://mcmc-jags.sourceforge.net)
 BugReports: https://github.com/fukayak/occumb/issues
 Language: en-US
 NeedsCompilation: no
-Packaged: 2023-10-19 11:19:22 UTC; kfukaya
+Packaged: 2024-01-08 12:56:09 UTC; kfukaya
 Author: Keiichi Fukaya [aut, cre],
   Ken Kellner [cph] (summary method for occumbFit class)
 Maintainer: Keiichi Fukaya <fukayak99@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-10-19 11:40:02 UTC
+Date/Publication: 2024-01-08 19:40:02 UTC
