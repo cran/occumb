@@ -1,6 +1,6 @@
 Package: occumb
 Title: Site Occupancy Modeling for Environmental DNA Metabarcoding
-Version: 1.0.3
+Version: 1.1.0
 Authors@R: c(
     person("Keiichi", "Fukaya", , "fukayak99@gmail.com", role = c("aut", "cre")),
     person("Ken", "Kellner", role = "cph",
@@ -19,8 +19,8 @@ Suggests: rmarkdown, spelling, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: stats, methods, graphics, checkmate, crayon, knitr
 Collate: 'classes.R' 'fish.R' 'fish_raw.R' 'get_posterior.R' 'gof.R'
-        'occumbData.R' 'occumb.R' 'plot.R' 'show.R' 'summary.R'
-        'utility.R' 'utils.R'
+        'occumbData.R' 'occumb.R' 'plot.R' 'predict.R' 'show.R'
+        'summary.R' 'utility.R' 'utils.R'
 URL: https://fukayak.github.io/occumb/,
         https://github.com/fukayak/occumb
 Depends: jagsUI, R (>= 2.10)
@@ -29,9 +29,9 @@ SystemRequirements: JAGS (http://mcmc-jags.sourceforge.net)
 BugReports: https://github.com/fukayak/occumb/issues
 Language: en-US
 NeedsCompilation: no
-Packaged: 2024-01-08 12:56:09 UTC; kfukaya
+Packaged: 2024-03-26 00:58:36 UTC; kfukaya
 Author: Keiichi Fukaya [aut, cre],
   Ken Kellner [cph] (summary method for occumbFit class)
 Maintainer: Keiichi Fukaya <fukayak99@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-01-08 19:40:02 UTC
+Date/Publication: 2024-03-26 06:30:02 UTC

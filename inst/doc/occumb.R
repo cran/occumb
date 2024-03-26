@@ -1,13 +1,13 @@
-## ----include = FALSE----------------------------------------------------------
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ----echo = FALSE, message = FALSE--------------------------------------------
+## ---- echo = FALSE, message = FALSE-------------------------------------------
 library(occumb)
 set.seed(1)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  data(fish)
 #  summary(fish)
 
@@ -34,19 +34,19 @@ set.seed(1)
 #> Labels for replicates: 
 #>  L, C, R 
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fish # Result not shown
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fit0 <- occumb(data = fish, parallel = TRUE)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fit1 <- occumb(formula_psi = ~ riverbank,
 #                 formula_phi_shared = ~ mismatch,
 #                 data = fish,
 #                 parallel = TRUE)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fit1x <- occumb(formula_psi = ~ riverbank,
 #                  formula_phi_shared = ~ mismatch,
 #                  data = fish,
@@ -54,13 +54,13 @@ set.seed(1)
 #                  n.iter = 40000,
 #                  parallel = TRUE)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  fit1 # Result not shown
 
-## ----eval = FALSE-------------------------------------------------------------
-#  plot(fit1)
+## ---- eval = FALSE------------------------------------------------------------
+#  plot(fit1) # Outputs many figures; enter "Esc" or "Ctrl + C" to quit
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  summary(fit1)
 
 ## -----------------------------------------------------------------------------
@@ -147,13 +147,8 @@ set.seed(1)
 #>  deviance: 
 #>   Rhat:  1.001 
 #>   n.eff: 1332 
-#> 
-#> **WARNING** Rhat values indicate convergence failure (Rhat > 1.1). 
-#> 
-#> DIC info: (pD = var(deviance)/2)
-#>  pD = 2131.5 and DIC = 19973.82 
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  post_summary_psi <- get_post_summary(fit1, "psi")
 #  post_summary_psi
 
@@ -169,13 +164,13 @@ set.seed(1)
 #> psi[8,1]   0.94296846 0.028288919 0.875373936 0.92739641 0.94770976 0.96354354 0.98337253 1.002581  1006        0 1
 #> (Omitted the remaining)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  attributes(post_summary_psi)$dimension
 
 ## -----------------------------------------------------------------------------
 #> [1] "Species" "Site"
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  attributes(post_summary_psi)$label
 
 ## -----------------------------------------------------------------------------
@@ -237,20 +232,20 @@ set.seed(1)
 #> [31] "31" "32" "33" "34" "35" "36" "37" "38" "39" "40" "41" "42" "43" "44" "45"
 #> [46] "46" "47" "48" "49" "50"
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  post_summary_gamma <- get_post_summary(fit1, "gamma")
 #  attributes(post_summary_gamma)$dimension
 
 ## -----------------------------------------------------------------------------
 #> [1] "Species" "Effects"
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  attributes(post_summary_gamma)$label$Effects
 
 ## -----------------------------------------------------------------------------
 #> [1] "(Intercept)"                 "riverbankwithout_vegetation"
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  post_summary_gamma
 
 ## -----------------------------------------------------------------------------
@@ -266,14 +261,35 @@ set.seed(1)
 #> gamma[8,2]  -1.36146823 0.4820477 -2.3661876 -1.654265660 -1.32819584 -1.04709249 -0.483307820 1.0014346  1791        0 0.99900
 #> (Omitted the remaining)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
+#  get_post_summary(fit1, "Mu")
+
+## -----------------------------------------------------------------------------
+#>              mean        sd       2.5%        25%         50%        75%
+#> Mu[1] -1.18914419 0.1466486 -1.4845230 -1.2872349 -1.18205680 -1.0888031
+#> Mu[2]  0.94327206 0.1945952  0.5640255  0.8102745  0.94803155  1.0691758
+#> Mu[3]  0.02522906 0.3264013 -0.6034793 -0.1859071  0.01929096  0.2317505
+#> Mu[4] -1.03746412 0.1609537 -1.3626390 -1.1414288 -1.03743346 -0.9292544
+#>            97.5%     Rhat n.eff overlap0      f
+#> Mu[1] -0.9119219 1.108793    30        0 1.0000
+#> Mu[2]  1.3284452 1.031154   100        0 1.0000
+#> Mu[3]  0.6951928 1.008576   352        1 0.5255
+#> Mu[4] -0.7312586 1.022904   135        0 1.0000
+#> attr(,"dimension")
+#> [1] "Effects"
+#> attr(,"label")
+#> attr(,"label")$Effects
+#> [1] "phi | (Intercept)"                 "theta | (Intercept)"              
+#> [3] "psi | (Intercept)"                 "psi | riverbankwithout_vegetation"
+
+## ---- eval = FALSE------------------------------------------------------------
 #  post_sample_psi <- get_post_samples(fit1, "psi")
 #  dim(post_sample_psi)
 
 ## -----------------------------------------------------------------------------
 #> [1] 4000   50   50
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  attributes(post_sample_psi)
 
 ## -----------------------------------------------------------------------------
@@ -345,7 +361,7 @@ set.seed(1)
 #> [31] "31" "32" "33" "34" "35" "36" "37" "38" "39" "40" "41" "42" "43" "44" "45"
 #> [46] "46" "47" "48" "49" "50"
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  post_sample_psi[, 1, 1]
 
 ## -----------------------------------------------------------------------------
@@ -355,10 +371,280 @@ set.seed(1)
 #> [22] 0.5947020 0.4880676 0.6958859 0.6202520 0.5487584 0.6781225 0.7073072
 #> (Omitted the remaining)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
+#  predict_psi <- predict(fit1, parameter = "psi", type = "quantiles")
+#  dim(predict_psi)
+
+## -----------------------------------------------------------------------------
+#> [1]  3 50 50
+
+## ---- eval = FALSE------------------------------------------------------------
+#  attributes(predict_psi)
+
+## -----------------------------------------------------------------------------
+#> $dim
+#> [1]  3 50 50
+#> 
+#> $dimnames
+#> $dimnames[[1]]
+#> [1] "50%"   "2.5%"  "97.5%"
+#> 
+#> $dimnames[[2]]
+#> NULL
+#> 
+#> $dimnames[[3]]
+#> NULL
+#> 
+#> 
+#> $parameter
+#> [1] "psi"
+#> 
+#> $scale
+#> [1] "response"
+#> 
+#> $dimension
+#> [1] "Statistics" "Species"    "Sites"     
+#> 
+#> $label
+#> $label$Statistics
+#> [1] "50%"   "2.5%"  "97.5%"
+#> 
+#> $label$Species
+#>  [1] "Abbottina rivularis"                     
+#>  [2] "Acanthogobius lactipes"                  
+#>  [3] "Acheilognathus macropterus"              
+#>  [4] "Acheilognathus rhombeus"                 
+#>  [5] "Anguilla japonica"                       
+#>  [6] "Biwia zezera"                            
+#>  [7] "Carassius cuvieri"                       
+#>  [8] "Carassius spp."                          
+#>  [9] "Channa argus"                            
+#> [10] "Ctenopharyngodon idella"                 
+#> [11] "Cyprinus carpio"                         
+#> [12] "Gambusia affinis"                        
+#> [13] "Gnathopogon spp."                        
+#> [14] "Gymnogobius castaneus"                   
+#> [15] "Gymnogobius petschiliensis"              
+#> [16] "Gymnogobius urotaenia"                   
+#> [17] "Hemibarbus spp."                         
+#> [18] "Hypomesus nipponensis"                   
+#> [19] "Hypophthalmichthys spp."                 
+#> [20] "Hyporhamphus intermedius"                
+#> [21] "Ictalurus punctatus"                     
+#> [22] "Ischikauia steenackeri"                  
+#> [23] "Lepomis macrochirus macrochirus"         
+#> [24] "Leucopsarion petersii"                   
+#> [25] "Megalobrama amblycephala"                
+#> [26] "Micropterus dolomieu dolomieu"           
+#> [27] "Micropterus salmoides"                   
+#> [28] "Misgurnus spp."                          
+#> [29] "Monopterus albus"                        
+#> [30] "Mugil cephalus cephalus"                 
+#> [31] "Mylopharyngodon piceus"                  
+#> [32] "Nipponocypris sieboldii"                 
+#> [33] "Nipponocypris temminckii"                
+#> [34] "Opsariichthys platypus"                  
+#> [35] "Opsariichthys uncirostris uncirostris"   
+#> [36] "Oryzias latipes"                         
+#> [37] "Plecoglossus altivelis altivelis"        
+#> [38] "Pseudogobio spp."                        
+#> [39] "Pseudorasbora parva"                     
+#> [40] "Rhinogobius spp."                        
+#> [41] "Rhodeus ocellatus ocellatus"             
+#> [42] "Salangichthys microdon"                  
+#> [43] "Sarcocheilichthys variegatus microoculus"
+#> [44] "Silurus asotus"                          
+#> [45] "Squalidus chankaensis biwae"             
+#> [46] "Tachysurus tokiensis"                    
+#> [47] "Tanakia lanceolata"                      
+#> [48] "Tribolodon brandtii maruta"              
+#> [49] "Tribolodon hakonensis"                   
+#> [50] "Tridentiger spp."                        
+#> 
+#> $label$Sites
+#>  [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10" "11" "12" "13" "14" "15"
+#> [16] "16" "17" "18" "19" "20" "21" "22" "23" "24" "25" "26" "27" "28" "29" "30"
+#> [31] "31" "32" "33" "34" "35" "36" "37" "38" "39" "40" "41" "42" "43" "44" "45"
+#> [46] "46" "47" "48" "49" "50"
+
+## ---- eval = FALSE------------------------------------------------------------
+#  new_y <- array(1, dim = c(50, 2, 1))
+#  new_riverbank <- factor(levels(fish_raw$riverbank))
+#  dimnames(new_y)[[1]] <- dimnames(fish_raw$y)[[1]]
+#  dimnames(new_y)[[2]] <- levels(fish_raw$riverbank)
+#  newdata <- occumbData(y = new_y,
+#                        spec_cov = list(mismatch = fish_raw$mismatch),
+#                        site_cov = list(riverbank = new_riverbank))
+
+## ---- eval = FALSE------------------------------------------------------------
+#  summary(newdata)
+
+## -----------------------------------------------------------------------------
+#> Sequence read counts: 
+#>  Number of species, I = 50 
+#>  Number of sites, J = 2 
+#>  Maximum number of replicates per site, K = 1 
+#>  Number of missing observations = 0 
+#>  Number of replicates per site: 1 (average), 0 (sd) 
+#>  Sequencing depth: 50 (average), 0 (sd) 
+#> 
+#> Species covariates: 
+#>  mismatch (continuous) 
+#> Site covariates: 
+#>  riverbank (categorical) 
+#> Replicate covariates: 
+#>  (None) 
+#> 
+#> Labels for species: 
+#>  Abbottina rivularis, Acanthogobius lactipes, Acheilognathus macropterus, Acheilognathus rhombeus, Anguilla japonica, Biwia zezera, Carassius cuvieri, Carassius spp., Channa argus, Ctenopharyngodon idella, Cyprinus carpio, Gambusia affinis, Gnathopogon spp., Gymnogobius castaneus, Gymnogobius petschiliensis, Gymnogobius urotaenia, Hemibarbus spp., Hypomesus nipponensis, Hypophthalmichthys spp., Hyporhamphus intermedius, Ictalurus punctatus, Ischikauia steenackeri, Lepomis macrochirus macrochirus, Leucopsarion petersii, Megalobrama amblycephala, Micropterus dolomieu dolomieu, Micropterus salmoides, Misgurnus spp., Monopterus albus, Mugil cephalus cephalus, Mylopharyngodon piceus, Nipponocypris sieboldii, Nipponocypris temminckii, Opsariichthys platypus, Opsariichthys uncirostris uncirostris, Oryzias latipes, Plecoglossus altivelis altivelis, Pseudogobio spp., Pseudorasbora parva, Rhinogobius spp., Rhodeus ocellatus ocellatus, Salangichthys microdon, Sarcocheilichthys variegatus microoculus, Silurus asotus, Squalidus chankaensis biwae, Tachysurus tokiensis, Tanakia lanceolata, Tribolodon brandtii maruta, Tribolodon hakonensis, Tridentiger spp. 
+#> Labels for sites: 
+#>  with_vegetation, without_vegetation 
+#> Labels for replicates: 
+#>  (None) 
+
+## ---- eval = FALSE------------------------------------------------------------
+#  predict(fit1, newdata = newdata, parameter = "psi", type = "quantiles")
+
+## -----------------------------------------------------------------------------
+#> , , 1
+#> 
+#>            [,1]      [,2]      [,3]       [,4]       [,5]       [,6]      [,7]
+#> 50%   0.6615133 0.2751231 0.3827295 0.15224665 0.17718177 0.09182312 0.8490621
+#> 2.5%  0.4802434 0.1300821 0.2306797 0.05507663 0.06783645 0.02441254 0.7212899
+#> 97.5% 0.7915599 0.4723714 0.5649520 0.32693805 0.38346795 0.24695832 0.9368627
+#>            [,8]      [,9]     [,10]     [,11]      [,12]     [,13]      [,14]
+#> 50%   0.9491461 0.6094722 0.4620570 0.9901477 0.08998769 0.8800989 0.15458012
+#> 2.5%  0.8789348 0.4101236 0.2996333 0.9557121 0.02421783 0.7735010 0.05625485
+#> 97.5% 0.9844834 0.8144525 0.6430711 0.9986149 0.23751947 0.9596028 0.31844988
+#>            [,15]     [,16]     [,17]      [,18]     [,19]     [,20]     [,21]
+#> 50%   0.12125019 0.9695970 0.9028737 0.15509196 0.5713331 0.2300419 0.8826944
+#> 2.5%  0.03724413 0.9110775 0.8015870 0.05106154 0.3814354 0.1092197 0.7664569
+#> 97.5% 0.26923379 0.9924366 0.9631803 0.34754250 0.7741282 0.4051336 0.9550034
+#>           [,22]     [,23]      [,24]      [,25]      [,26]     [,27]     [,28]
+#> 50%   0.7916404 0.7469745 0.06964821 0.15088247 0.10296476 0.8278437 0.9750893
+#> 2.5%  0.6445037 0.5788305 0.01384897 0.04985234 0.02831969 0.7060083 0.9284540
+#> 97.5% 0.9020019 0.8627692 0.19692563 0.34110667 0.25821933 0.9216507 0.9943395
+#>            [,29]     [,30]      [,31]     [,32]     [,33]     [,34]     [,35]
+#> 50%   0.06220973 0.4863689 0.07515230 0.4353972 0.2299977 0.8332137 0.5024979
+#> 2.5%  0.01098996 0.2994199 0.01757379 0.2667359 0.1056246 0.6977411 0.3344813
+#> 97.5% 0.19309849 0.6536841 0.21486234 0.6188191 0.4107509 0.9326166 0.6992168
+#>           [,36]      [,37]     [,38]     [,39]     [,40]     [,41]      [,42]
+#> 50%   0.5793313 0.09849281 0.5462387 0.9190994 0.9970209 0.8173368 0.09874564
+#> 2.5%  0.4008518 0.02705771 0.3669093 0.8250025 0.9815437 0.6718077 0.02554623
+#> 97.5% 0.7541354 0.25569027 0.7265439 0.9755158 0.9997452 0.9114977 0.26906733
+#>            [,43]     [,44]     [,45]     [,46]      [,47]     [,48]     [,49]
+#> 50%   0.15160773 0.5472967 0.3177699 0.1336518 0.16453410 0.3119199 0.1010661
+#> 2.5%  0.05407187 0.3702903 0.1750710 0.0401887 0.06069858 0.1646373 0.0270361
+#> 97.5% 0.32445164 0.7429405 0.4983112 0.3168030 0.32694679 0.4919569 0.2257502
+#>           [,50]
+#> 50%   0.9885246
+#> 2.5%  0.9521853
+#> 97.5% 0.9984315
+#> 
+#> , , 2
+#> 
+#>            [,1]       [,2]       [,3]       [,4]       [,5]       [,6]
+#> 50%   0.4756873 0.16831019 0.17344502 0.06827157 0.08065680 0.03799725
+#> 2.5%  0.3210251 0.07468112 0.08268459 0.02152790 0.02558621 0.00904520
+#> 97.5% 0.6477671 0.31803370 0.30375314 0.16653407 0.20628815 0.10914663
+#>            [,7]      [,8]      [,9]     [,10]     [,11]      [,12]     [,13]
+#> 50%   0.5747380 0.8277408 0.4451700 0.2415741 0.9426904 0.04637033 0.6435848
+#> 2.5%  0.4085796 0.6832309 0.2727587 0.1336498 0.8361653 0.01254011 0.4719155
+#> 97.5% 0.7316505 0.9241055 0.6653103 0.3976390 0.9855532 0.12900086 0.7834428
+#>            [,14]      [,15]     [,16]     [,17]      [,18]     [,19]     [,20]
+#> 50%   0.07037047 0.06163691 0.8602899 0.6909106 0.08289891 0.3366483 0.1156426
+#> 2.5%  0.02364689 0.01866216 0.7192849 0.5273816 0.02726444 0.2012909 0.0498471
+#> 97.5% 0.16850684 0.15171748 0.9468762 0.8219908 0.20203910 0.5227359 0.2284146
+#>           [,21]     [,22]     [,23]       [,24]      [,25]      [,26]     [,27]
+#> 50%   0.7204299 0.5831452 0.5653456 0.030925710 0.06781351 0.05881219 0.6000844
+#> 2.5%  0.5574411 0.4218203 0.4080076 0.006236538 0.02063876 0.01733949 0.4410841
+#> 97.5% 0.8503492 0.7422631 0.7276702 0.094870829 0.17049638 0.16207666 0.7470483
+#>           [,28]       [,29]     [,30]      [,31]      [,32]      [,33]
+#> 50%   0.9126102 0.035225441 0.3407391 0.04236923 0.16616006 0.08886842
+#> 2.5%  0.8020100 0.007672009 0.2031182 0.01018349 0.07272355 0.03188771
+#> 97.5% 0.9696633 0.110552419 0.5178231 0.13816851 0.29161845 0.18440940
+#>           [,34]     [,35]     [,36]      [,37]     [,38]     [,39]     [,40]
+#> 50%   0.5159626 0.2344728 0.3705463 0.04820736 0.2161039 0.7693729 0.9831972
+#> 2.5%  0.3512136 0.1224432 0.2295261 0.01206818 0.1039605 0.6147098 0.9306534
+#> 97.5% 0.6751210 0.3846941 0.5527593 0.13468654 0.3594184 0.8923270 0.9976299
+#>           [,41]      [,42]      [,43]     [,44]      [,45]      [,46]
+#> 50%   0.6527351 0.06006526 0.06753850 0.2371226 0.15535572 0.05145973
+#> 2.5%  0.4967540 0.01537025 0.02157825 0.1134572 0.07282467 0.01382803
+#> 97.5% 0.7956659 0.16542028 0.16515022 0.3848913 0.27405126 0.13368309
+#>            [,47]      [,48]      [,49]     [,50]
+#> 50%   0.08990812 0.13653424 0.05038579 0.9428926
+#> 2.5%  0.03330197 0.05777936 0.01466287 0.8401821
+#> 97.5% 0.20500919 0.25327092 0.12890174 0.9873862
+#> 
+#> attr(,"parameter")
+#> [1] "psi"
+#> attr(,"scale")
+#> [1] "response"
+#> attr(,"dimension")
+#> [1] "Statistics" "Species"    "Sites"     
+#> attr(,"label")
+#> attr(,"label")$Statistics
+#> [1] "50%"   "2.5%"  "97.5%"
+#> 
+#> attr(,"label")$Species
+#>  [1] "Abbottina rivularis"                     
+#>  [2] "Acanthogobius lactipes"                  
+#>  [3] "Acheilognathus macropterus"              
+#>  [4] "Acheilognathus rhombeus"                 
+#>  [5] "Anguilla japonica"                       
+#>  [6] "Biwia zezera"                            
+#>  [7] "Carassius cuvieri"                       
+#>  [8] "Carassius spp."                          
+#>  [9] "Channa argus"                            
+#> [10] "Ctenopharyngodon idella"                 
+#> [11] "Cyprinus carpio"                         
+#> [12] "Gambusia affinis"                        
+#> [13] "Gnathopogon spp."                        
+#> [14] "Gymnogobius castaneus"                   
+#> [15] "Gymnogobius petschiliensis"              
+#> [16] "Gymnogobius urotaenia"                   
+#> [17] "Hemibarbus spp."                         
+#> [18] "Hypomesus nipponensis"                   
+#> [19] "Hypophthalmichthys spp."                 
+#> [20] "Hyporhamphus intermedius"                
+#> [21] "Ictalurus punctatus"                     
+#> [22] "Ischikauia steenackeri"                  
+#> [23] "Lepomis macrochirus macrochirus"         
+#> [24] "Leucopsarion petersii"                   
+#> [25] "Megalobrama amblycephala"                
+#> [26] "Micropterus dolomieu dolomieu"           
+#> [27] "Micropterus salmoides"                   
+#> [28] "Misgurnus spp."                          
+#> [29] "Monopterus albus"                        
+#> [30] "Mugil cephalus cephalus"                 
+#> [31] "Mylopharyngodon piceus"                  
+#> [32] "Nipponocypris sieboldii"                 
+#> [33] "Nipponocypris temminckii"                
+#> [34] "Opsariichthys platypus"                  
+#> [35] "Opsariichthys uncirostris uncirostris"   
+#> [36] "Oryzias latipes"                         
+#> [37] "Plecoglossus altivelis altivelis"        
+#> [38] "Pseudogobio spp."                        
+#> [39] "Pseudorasbora parva"                     
+#> [40] "Rhinogobius spp."                        
+#> [41] "Rhodeus ocellatus ocellatus"             
+#> [42] "Salangichthys microdon"                  
+#> [43] "Sarcocheilichthys variegatus microoculus"
+#> [44] "Silurus asotus"                          
+#> [45] "Squalidus chankaensis biwae"             
+#> [46] "Tachysurus tokiensis"                    
+#> [47] "Tanakia lanceolata"                      
+#> [48] "Tribolodon brandtii maruta"              
+#> [49] "Tribolodon hakonensis"                   
+#> [50] "Tridentiger spp."                        
+#> 
+#> attr(,"label")$Sites
+#> [1] "with_vegetation"    "without_vegetation"
+
+## ---- eval = FALSE------------------------------------------------------------
 #  gof_result <- gof(fit1, cores = 4)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  gof_result
 
 ## -----------------------------------------------------------------------------
@@ -368,10 +654,10 @@ set.seed(1)
 #>  Discrepancy statistics for observed data:   542.81 (mean), 17.92 (sd) 
 #>  Discrepancy statistics for replicated data: 523.28 (mean), 16.47 (sd) 
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  plot(gof_result)
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  utilL1 <- eval_util_L(expand.grid(K = 1:3, N = c(1E3, 1E4, 1E5)),
 #                        fit1, cores = 4)
 #  utilL1
@@ -388,7 +674,7 @@ set.seed(1)
 #> 8 2 1e+05 18.20935
 #> 9 3 1e+05 19.23478
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  settings <- list_cond_L(budget = 875 * 1E3,
 #                          lambda1 = 0.01,
 #                          lambda2 = 5000,
@@ -402,7 +688,7 @@ set.seed(1)
 #> 2 875000    0.01    5000 2  375000.00 18.37862
 #> 3 875000    0.01    5000 3   83333.33 19.21953
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  utilR1 <- eval_util_R(expand.grid(J = 1:3, K = 1:3, N = c(1E3, 1E4, 1E5)),
 #                        fit1, cores = 4)
 #  utilR1
@@ -436,7 +722,7 @@ set.seed(1)
 #> 26 2 3 1e+05 25.85813
 #> 27 3 3 1e+05 29.68874
 
-## ----eval = FALSE-------------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  settings <- list_cond_R(budget = 1125 * 1E3,
 #                          lambda1 = 0.01,
 #                          lambda2 = 5000,
