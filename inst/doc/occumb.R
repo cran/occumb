@@ -1,92 +1,96 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ---- echo = FALSE, message = FALSE-------------------------------------------
+## ----echo = FALSE, message = FALSE--------------------------------------------
 library(occumb)
 set.seed(1)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  data(fish)
-#  summary(fish)
+## ----eval = FALSE-------------------------------------------------------------
+# data(fish)
+# summary(fish)
 
 ## -----------------------------------------------------------------------------
-#> Sequence read counts: 
-#>  Number of species, I = 50 
-#>  Number of sites, J = 50 
-#>  Maximum number of replicates per site, K = 3 
-#>  Number of missing observations = 6 
+#> Sequence read counts:
+#>  Number of species, I = 50
+#>  Number of sites, J = 50
+#>  Maximum number of replicates per site, K = 3
+#>  Number of missing observations = 6
 #>  Number of replicates per site: 2.88 (average), 0.33 (sd)
 #>  Sequencing depth: 77910 (average), 98034.7 (sd)
-#> 
-#> Species covariates: 
-#>  mismatch (continuous) 
-#> Site covariates: 
-#>  riverbank (categorical) 
-#> Replicate covariates: 
-#>  (None) 
-#> 
-#> Labels for species: 
-#>  Abbottina rivularis, Acanthogobius lactipes, Acheilognathus macropterus, Acheilognathus rhombeus, Anguilla japonica, Biwia zezera, Carassius cuvieri, Carassius spp., Channa argus, Ctenopharyngodon idella, Cyprinus carpio, Gambusia affinis, Gnathopogon spp., Gymnogobius castaneus, Gymnogobius petschiliensis, Gymnogobius urotaenia, Hemibarbus spp., Hypomesus nipponensis, Hypophthalmichthys spp., Hyporhamphus intermedius, Ictalurus punctatus, Ischikauia steenackeri, Lepomis macrochirus macrochirus, Leucopsarion petersii, Megalobrama amblycephala, Micropterus dolomieu dolomieu, Micropterus salmoides, Misgurnus spp., Monopterus albus, Mugil cephalus cephalus, Mylopharyngodon piceus, Nipponocypris sieboldii, Nipponocypris temminckii, Opsariichthys platypus, Opsariichthys uncirostris uncirostris, Oryzias latipes, Plecoglossus altivelis altivelis, Pseudogobio spp., Pseudorasbora parva, Rhinogobius spp., Rhodeus ocellatus ocellatus, Salangichthys microdon, Sarcocheilichthys variegatus microoculus, Silurus asotus, Squalidus chankaensis biwae, Tachysurus tokiensis, Tanakia lanceolata, Tribolodon brandtii maruta, Tribolodon hakonensis, Tridentiger spp. 
-#> Labels for sites: 
-#>  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 
-#> Labels for replicates: 
-#>  L, C, R 
+#>
+#> Species covariates:
+#>  mismatch (continuous)
+#> Site covariates:
+#>  riverbank (categorical)
+#> Replicate covariates:
+#>  (None)
+#>
+#> Labels for species:
+#>  Abbottina rivularis, Acanthogobius lactipes, Acheilognathus macropterus, Acheilognathus rhombeus, Anguilla japonica, Biwia zezera, Carassius cuvieri, Carassius spp., Channa argus, Ctenopharyngodon idella, Cyprinus carpio, Gambusia affinis, Gnathopogon spp., Gymnogobius castaneus, Gymnogobius petschiliensis, Gymnogobius urotaenia, Hemibarbus spp., Hypomesus nipponensis, Hypophthalmichthys spp., Hyporhamphus intermedius, Ictalurus punctatus, Ischikauia steenackeri, Lepomis macrochirus macrochirus, Leucopsarion petersii, Megalobrama amblycephala, Micropterus dolomieu dolomieu, Micropterus salmoides, Misgurnus spp., Monopterus albus, Mugil cephalus cephalus, Mylopharyngodon piceus, Nipponocypris sieboldii, Nipponocypris temminckii, Opsariichthys platypus, Opsariichthys uncirostris uncirostris, Oryzias latipes, Plecoglossus altivelis altivelis, Pseudogobio spp., Pseudorasbora parva, Rhinogobius spp., Rhodeus ocellatus ocellatus, Salangichthys microdon, Sarcocheilichthys variegatus microoculus, Silurus asotus, Squalidus chankaensis biwae, Tachysurus tokiensis, Tanakia lanceolata, Tribolodon brandtii maruta, Tribolodon hakonensis, Tridentiger spp.
+#> Labels for sites:
+#>  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50
+#> Labels for replicates:
+#>  L, C, R
 
-## ---- eval = FALSE------------------------------------------------------------
-#  fish # Result not shown
+## ----eval = FALSE-------------------------------------------------------------
+# fish # Result not shown
 
-## ---- eval = FALSE------------------------------------------------------------
-#  fit0 <- occumb(data = fish, parallel = TRUE)
+## ----eval = FALSE-------------------------------------------------------------
+# fit0 <- occumb(data = fish, parallel = TRUE)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  fit1 <- occumb(formula_psi = ~ riverbank,
-#                 formula_phi_shared = ~ mismatch,
-#                 data = fish,
-#                 parallel = TRUE)
+## ----eval = FALSE-------------------------------------------------------------
+# fit1 <- occumb(
+#   formula_psi = ~riverbank,
+#   formula_phi_shared = ~mismatch,
+#   data = fish,
+#   parallel = TRUE
+# )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  fit1x <- occumb(formula_psi = ~ riverbank,
-#                  formula_phi_shared = ~ mismatch,
-#                  data = fish,
-#                  n.thin = 20,
-#                  n.iter = 40000,
-#                  parallel = TRUE)
+## ----eval = FALSE-------------------------------------------------------------
+# fit1x <- occumb(
+#   formula_psi = ~riverbank,
+#   formula_phi_shared = ~mismatch,
+#   data = fish,
+#   n.thin = 20,
+#   n.iter = 40000,
+#   parallel = TRUE
+# )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  fit1 # Result not shown
+## ----eval = FALSE-------------------------------------------------------------
+# fit1 # Result not shown
 
-## ---- eval = FALSE------------------------------------------------------------
-#  plot(fit1) # Outputs many figures; enter "Esc" or "Ctrl + C" to quit
+## ----eval = FALSE-------------------------------------------------------------
+# plot(fit1) # Outputs many figures; enter "Esc" or "Ctrl + C" to quit
 
-## ---- eval = FALSE------------------------------------------------------------
-#  summary(fit1)
+## ----eval = FALSE-------------------------------------------------------------
+# summary(fit1)
 
 ## -----------------------------------------------------------------------------
-#> Summary for an occumbFit object 
-#> 
+#> Summary for an occumbFit object
+#>
 #> Summary of data:
-#>  Number of species, I = 50 
-#>  Number of sites, J = 50 
-#>  Maximum number of replicates per site, K = 3 
-#>  Number of missing observations = 6 
-#>  Number of replicates per site: 2.88 (average), 0.33 (sd) 
-#>  Sequencing depth: 77910 (average), 98034.7 (sd) 
-#> 
+#>  Number of species, I = 50
+#>  Number of sites, J = 50
+#>  Maximum number of replicates per site, K = 3
+#>  Number of missing observations = 6
+#>  Number of replicates per site: 2.88 (average), 0.33 (sd)
+#>  Sequencing depth: 77910 (average), 98034.7 (sd)
+#>
 #> Model specification:
-#>  formula_phi:          ~ 1 
-#>  formula_theta:        ~ 1 
-#>  formula_psi:          ~ riverbank 
-#>  formula_phi_shared:   ~ mismatch 
-#>  formula_theta_shared: ~ 1 
-#>  formula_psi_shared:   ~ 1 
-#>  prior_prec:           1e-04 
-#>  prior_ulim:           10000 
-#> 
+#>  formula_phi:          ~ 1
+#>  formula_theta:        ~ 1
+#>  formula_psi:          ~ riverbank
+#>  formula_phi_shared:   ~ mismatch
+#>  formula_theta_shared: ~ 1
+#>  formula_psi_shared:   ~ 1
+#>  prior_prec:           1e-04
+#>  prior_ulim:           10000
+#>
 #> Saved parameters:
-#>  Mu sigma rho alpha beta gamma alpha_shared phi theta psi z pi deviance 
-#> 
+#>  Mu sigma rho alpha beta gamma alpha_shared phi theta psi z pi deviance
+#>
 #> MCMC ran in parallel for 43.593 minutes at time 2023-09-11 20:16:31.787026:
 #>  For each of 4 chains:
 #>   Adaptation:            100 iterations (sufficient)
@@ -94,63 +98,63 @@ set.seed(1)
 #>   Thin rate:             10 iterations
 #>   Total chain length:    20100 iterations
 #>   Posterior sample size: 1000 draws
-#> 
-#> Summary of posterior samples: 
-#>  Mu: 
-#>   Number of parameters: 4 
-#>   Rhat:  1.009 (min), 1.027 (median), 1.043 (mean), 1.109 (max) 
-#>   n.eff: 30 (min), 117.5 (median), 154.2 (mean), 352 (max) 
-#>  sigma: 
-#>   Number of parameters: 4 
-#>   Rhat:  1.004 (min), 1.04 (median), 1.074 (mean), 1.213 (max) 
-#>   n.eff: 17 (min), 67.5 (median), 217 (mean), 716 (max) 
-#>  rho: 
-#>   Number of parameters: 6 
-#>   Rhat:  1.042 (min), 1.107 (median), 1.106 (mean), 1.187 (max) 
-#>   n.eff: 19 (min), 33.5 (median), 40.7 (mean), 79 (max) 
-#>  alpha: 
-#>   Number of parameters: 50 
-#>   Rhat:  1.027 (min), 1.093 (median), 1.157 (mean), 1.77 (max) 
-#>   n.eff: 7 (min), 34 (median), 40.6 (mean), 104 (max) 
-#>  beta: 
-#>   Number of parameters: 50 
-#>   Rhat:  1.002 (min), 1.018 (median), 1.028 (mean), 1.237 (max) 
-#>   n.eff: 16 (min), 183.5 (median), 349.9 (mean), 4000 (max) 
-#>  gamma: 
-#>   Number of parameters: 100 
-#>   Rhat:  1.001 (min), 1.019 (median), 1.029 (mean), 1.136 (max) 
-#>   n.eff: 24 (min), 173.5 (median), 363.5 (mean), 2756 (max) 
-#>  alpha_shared: 
-#>   Number of parameters: 1 
-#>   Rhat:  1.1 
-#>   n.eff: 31 
-#>  phi: 
-#>   Number of parameters: 50 
-#>   Rhat:  1.001 (min), 1.07 (median), 1.127 (mean), 1.664 (max) 
-#>   n.eff: 8 (min), 42.5 (median), 202.7 (mean), 3161 (max) 
-#>  theta: 
-#>   Number of parameters: 50 
-#>   Rhat:  1.002 (min), 1.016 (median), 1.024 (mean), 1.219 (max) 
-#>   n.eff: 16 (min), 196 (median), 358.1 (mean), 4000 (max) 
-#>  psi: 
-#>   Number of parameters: 2500 
-#>   Rhat:  1 (min), 1.008 (median), 1.013 (mean), 1.101 (max) 
-#>   n.eff: 36 (min), 396 (median), 679.3 (mean), 4000 (max) 
-#>  z: 
-#>   Number of parameters: 2500 
-#>   Rhat:  1 (min), 1.006 (median), 1.009 (mean), 1.184 (max), 946 (Number of NAs) 
-#>   n.eff: 1 (min), 1233.5 (median), 1628.6 (mean), 4000 (max) 
-#>  pi: 
-#>   Number of parameters: 7500 
-#>   Rhat:  1 (min), 1.078 (median), 1.102 (mean), 1.294 (max), 30 (Number of NAs) 
-#>   n.eff: 1 (min), 1 (median), 1009.1 (mean), 4000 (max) 
-#>  deviance: 
-#>   Rhat:  1.001 
-#>   n.eff: 1332 
+#>
+#> Summary of posterior samples:
+#>  Mu:
+#>   Number of parameters: 4
+#>   Rhat:  1.009 (min), 1.027 (median), 1.043 (mean), 1.109 (max)
+#>   n.eff: 30 (min), 117.5 (median), 154.2 (mean), 352 (max)
+#>  sigma:
+#>   Number of parameters: 4
+#>   Rhat:  1.004 (min), 1.04 (median), 1.074 (mean), 1.213 (max)
+#>   n.eff: 17 (min), 67.5 (median), 217 (mean), 716 (max)
+#>  rho:
+#>   Number of parameters: 6
+#>   Rhat:  1.042 (min), 1.107 (median), 1.106 (mean), 1.187 (max)
+#>   n.eff: 19 (min), 33.5 (median), 40.7 (mean), 79 (max)
+#>  alpha:
+#>   Number of parameters: 50
+#>   Rhat:  1.027 (min), 1.093 (median), 1.157 (mean), 1.77 (max)
+#>   n.eff: 7 (min), 34 (median), 40.6 (mean), 104 (max)
+#>  beta:
+#>   Number of parameters: 50
+#>   Rhat:  1.002 (min), 1.018 (median), 1.028 (mean), 1.237 (max)
+#>   n.eff: 16 (min), 183.5 (median), 349.9 (mean), 4000 (max)
+#>  gamma:
+#>   Number of parameters: 100
+#>   Rhat:  1.001 (min), 1.019 (median), 1.029 (mean), 1.136 (max)
+#>   n.eff: 24 (min), 173.5 (median), 363.5 (mean), 2756 (max)
+#>  alpha_shared:
+#>   Number of parameters: 1
+#>   Rhat:  1.1
+#>   n.eff: 31
+#>  phi:
+#>   Number of parameters: 50
+#>   Rhat:  1.001 (min), 1.07 (median), 1.127 (mean), 1.664 (max)
+#>   n.eff: 8 (min), 42.5 (median), 202.7 (mean), 3161 (max)
+#>  theta:
+#>   Number of parameters: 50
+#>   Rhat:  1.002 (min), 1.016 (median), 1.024 (mean), 1.219 (max)
+#>   n.eff: 16 (min), 196 (median), 358.1 (mean), 4000 (max)
+#>  psi:
+#>   Number of parameters: 2500
+#>   Rhat:  1 (min), 1.008 (median), 1.013 (mean), 1.101 (max)
+#>   n.eff: 36 (min), 396 (median), 679.3 (mean), 4000 (max)
+#>  z:
+#>   Number of parameters: 2500
+#>   Rhat:  1 (min), 1.006 (median), 1.009 (mean), 1.184 (max), 946 (Number of NAs)
+#>   n.eff: 1 (min), 1233.5 (median), 1628.6 (mean), 4000 (max)
+#>  pi:
+#>   Number of parameters: 7500
+#>   Rhat:  1 (min), 1.078 (median), 1.102 (mean), 1.294 (max), 30 (Number of NAs)
+#>   n.eff: 1 (min), 1 (median), 1009.1 (mean), 4000 (max)
+#>  deviance:
+#>   Rhat:  1.001
+#>   n.eff: 1332
 
-## ---- eval = FALSE------------------------------------------------------------
-#  post_summary_psi <- get_post_summary(fit1, "psi")
-#  post_summary_psi
+## ----eval = FALSE-------------------------------------------------------------
+# post_summary_psi <- get_post_summary(fit1, "psi")
+# post_summary_psi
 
 ## -----------------------------------------------------------------------------
 #>                  mean          sd        2.5%        25%        50%        75%      97.5%     Rhat n.eff overlap0 f
@@ -164,89 +168,89 @@ set.seed(1)
 #> psi[8,1]   0.94296846 0.028288919 0.875373936 0.92739641 0.94770976 0.96354354 0.98337253 1.002581  1006        0 1
 #> (Omitted the remaining)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  attributes(post_summary_psi)$dimension
+## ----eval = FALSE-------------------------------------------------------------
+# attributes(post_summary_psi)$dimension
 
 ## -----------------------------------------------------------------------------
 #> [1] "Species" "Site"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  attributes(post_summary_psi)$label
+## ----eval = FALSE-------------------------------------------------------------
+# attributes(post_summary_psi)$label
 
 ## -----------------------------------------------------------------------------
 #> $Species
-#>  [1] "Abbottina rivularis"                     
-#>  [2] "Acanthogobius lactipes"                  
-#>  [3] "Acheilognathus macropterus"              
-#>  [4] "Acheilognathus rhombeus"                 
-#>  [5] "Anguilla japonica"                       
-#>  [6] "Biwia zezera"                            
-#>  [7] "Carassius cuvieri"                       
-#>  [8] "Carassius spp."                          
-#>  [9] "Channa argus"                            
-#> [10] "Ctenopharyngodon idella"                 
-#> [11] "Cyprinus carpio"                         
-#> [12] "Gambusia affinis"                        
-#> [13] "Gnathopogon spp."                        
-#> [14] "Gymnogobius castaneus"                   
-#> [15] "Gymnogobius petschiliensis"              
-#> [16] "Gymnogobius urotaenia"                   
-#> [17] "Hemibarbus spp."                         
-#> [18] "Hypomesus nipponensis"                   
-#> [19] "Hypophthalmichthys spp."                 
-#> [20] "Hyporhamphus intermedius"                
-#> [21] "Ictalurus punctatus"                     
-#> [22] "Ischikauia steenackeri"                  
-#> [23] "Lepomis macrochirus macrochirus"         
-#> [24] "Leucopsarion petersii"                   
-#> [25] "Megalobrama amblycephala"                
-#> [26] "Micropterus dolomieu dolomieu"           
-#> [27] "Micropterus salmoides"                   
-#> [28] "Misgurnus spp."                          
-#> [29] "Monopterus albus"                        
-#> [30] "Mugil cephalus cephalus"                 
-#> [31] "Mylopharyngodon piceus"                  
-#> [32] "Nipponocypris sieboldii"                 
-#> [33] "Nipponocypris temminckii"                
-#> [34] "Opsariichthys platypus"                  
-#> [35] "Opsariichthys uncirostris uncirostris"   
-#> [36] "Oryzias latipes"                         
-#> [37] "Plecoglossus altivelis altivelis"        
-#> [38] "Pseudogobio spp."                        
-#> [39] "Pseudorasbora parva"                     
-#> [40] "Rhinogobius spp."                        
-#> [41] "Rhodeus ocellatus ocellatus"             
-#> [42] "Salangichthys microdon"                  
+#>  [1] "Abbottina rivularis"
+#>  [2] "Acanthogobius lactipes"
+#>  [3] "Acheilognathus macropterus"
+#>  [4] "Acheilognathus rhombeus"
+#>  [5] "Anguilla japonica"
+#>  [6] "Biwia zezera"
+#>  [7] "Carassius cuvieri"
+#>  [8] "Carassius spp."
+#>  [9] "Channa argus"
+#> [10] "Ctenopharyngodon idella"
+#> [11] "Cyprinus carpio"
+#> [12] "Gambusia affinis"
+#> [13] "Gnathopogon spp."
+#> [14] "Gymnogobius castaneus"
+#> [15] "Gymnogobius petschiliensis"
+#> [16] "Gymnogobius urotaenia"
+#> [17] "Hemibarbus spp."
+#> [18] "Hypomesus nipponensis"
+#> [19] "Hypophthalmichthys spp."
+#> [20] "Hyporhamphus intermedius"
+#> [21] "Ictalurus punctatus"
+#> [22] "Ischikauia steenackeri"
+#> [23] "Lepomis macrochirus macrochirus"
+#> [24] "Leucopsarion petersii"
+#> [25] "Megalobrama amblycephala"
+#> [26] "Micropterus dolomieu dolomieu"
+#> [27] "Micropterus salmoides"
+#> [28] "Misgurnus spp."
+#> [29] "Monopterus albus"
+#> [30] "Mugil cephalus cephalus"
+#> [31] "Mylopharyngodon piceus"
+#> [32] "Nipponocypris sieboldii"
+#> [33] "Nipponocypris temminckii"
+#> [34] "Opsariichthys platypus"
+#> [35] "Opsariichthys uncirostris uncirostris"
+#> [36] "Oryzias latipes"
+#> [37] "Plecoglossus altivelis altivelis"
+#> [38] "Pseudogobio spp."
+#> [39] "Pseudorasbora parva"
+#> [40] "Rhinogobius spp."
+#> [41] "Rhodeus ocellatus ocellatus"
+#> [42] "Salangichthys microdon"
 #> [43] "Sarcocheilichthys variegatus microoculus"
-#> [44] "Silurus asotus"                          
-#> [45] "Squalidus chankaensis biwae"             
-#> [46] "Tachysurus tokiensis"                    
-#> [47] "Tanakia lanceolata"                      
-#> [48] "Tribolodon brandtii maruta"              
-#> [49] "Tribolodon hakonensis"                   
-#> [50] "Tridentiger spp."                        
-#> 
+#> [44] "Silurus asotus"
+#> [45] "Squalidus chankaensis biwae"
+#> [46] "Tachysurus tokiensis"
+#> [47] "Tanakia lanceolata"
+#> [48] "Tribolodon brandtii maruta"
+#> [49] "Tribolodon hakonensis"
+#> [50] "Tridentiger spp."
+#>
 #> $Site
 #>  [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10" "11" "12" "13" "14" "15"
 #> [16] "16" "17" "18" "19" "20" "21" "22" "23" "24" "25" "26" "27" "28" "29" "30"
 #> [31] "31" "32" "33" "34" "35" "36" "37" "38" "39" "40" "41" "42" "43" "44" "45"
 #> [46] "46" "47" "48" "49" "50"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  post_summary_gamma <- get_post_summary(fit1, "gamma")
-#  attributes(post_summary_gamma)$dimension
+## ----eval = FALSE-------------------------------------------------------------
+# post_summary_gamma <- get_post_summary(fit1, "gamma")
+# attributes(post_summary_gamma)$dimension
 
 ## -----------------------------------------------------------------------------
 #> [1] "Species" "Effects"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  attributes(post_summary_gamma)$label$Effects
+## ----eval = FALSE-------------------------------------------------------------
+# attributes(post_summary_gamma)$label$Effects
 
 ## -----------------------------------------------------------------------------
 #> [1] "(Intercept)"                 "riverbankwithout_vegetation"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  post_summary_gamma
+## ----eval = FALSE-------------------------------------------------------------
+# post_summary_gamma
 
 ## -----------------------------------------------------------------------------
 #>                    mean        sd       2.5%          25%         50%         75%        97.5%      Rhat n.eff overlap0       f
@@ -261,8 +265,8 @@ set.seed(1)
 #> gamma[8,2]  -1.36146823 0.4820477 -2.3661876 -1.654265660 -1.32819584 -1.04709249 -0.483307820 1.0014346  1791        0 0.99900
 #> (Omitted the remaining)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  get_post_summary(fit1, "Mu")
+## ----eval = FALSE-------------------------------------------------------------
+# get_post_summary(fit1, "Mu")
 
 ## -----------------------------------------------------------------------------
 #>              mean        sd       2.5%        25%         50%        75%
@@ -279,90 +283,90 @@ set.seed(1)
 #> [1] "Effects"
 #> attr(,"label")
 #> attr(,"label")$Effects
-#> [1] "phi | (Intercept)"                 "theta | (Intercept)"              
+#> [1] "phi | (Intercept)"                 "theta | (Intercept)"
 #> [3] "psi | (Intercept)"                 "psi | riverbankwithout_vegetation"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  post_sample_psi <- get_post_samples(fit1, "psi")
-#  dim(post_sample_psi)
+## ----eval = FALSE-------------------------------------------------------------
+# post_sample_psi <- get_post_samples(fit1, "psi")
+# dim(post_sample_psi)
 
 ## -----------------------------------------------------------------------------
 #> [1] 4000   50   50
 
-## ---- eval = FALSE------------------------------------------------------------
-#  attributes(post_sample_psi)
+## ----eval = FALSE-------------------------------------------------------------
+# attributes(post_sample_psi)
 
 ## -----------------------------------------------------------------------------
 #> $dim
 #> [1] 4000   50   50
-#> 
+#>
 #> $dimension
-#> [1] "Sample"  "Species" "Site"   
-#> 
+#> [1] "Sample"  "Species" "Site"
+#>
 #> $label
 #> $label$Sample
 #> NULL
-#> 
+#>
 #> $label$Species
-#>  [1] "Abbottina rivularis"                     
-#>  [2] "Acanthogobius lactipes"                  
-#>  [3] "Acheilognathus macropterus"              
-#>  [4] "Acheilognathus rhombeus"                 
-#>  [5] "Anguilla japonica"                       
-#>  [6] "Biwia zezera"                            
-#>  [7] "Carassius cuvieri"                       
-#>  [8] "Carassius spp."                          
-#>  [9] "Channa argus"                            
-#> [10] "Ctenopharyngodon idella"                 
-#> [11] "Cyprinus carpio"                         
-#> [12] "Gambusia affinis"                        
-#> [13] "Gnathopogon spp."                        
-#> [14] "Gymnogobius castaneus"                   
-#> [15] "Gymnogobius petschiliensis"              
-#> [16] "Gymnogobius urotaenia"                   
-#> [17] "Hemibarbus spp."                         
-#> [18] "Hypomesus nipponensis"                   
-#> [19] "Hypophthalmichthys spp."                 
-#> [20] "Hyporhamphus intermedius"                
-#> [21] "Ictalurus punctatus"                     
-#> [22] "Ischikauia steenackeri"                  
-#> [23] "Lepomis macrochirus macrochirus"         
-#> [24] "Leucopsarion petersii"                   
-#> [25] "Megalobrama amblycephala"                
-#> [26] "Micropterus dolomieu dolomieu"           
-#> [27] "Micropterus salmoides"                   
-#> [28] "Misgurnus spp."                          
-#> [29] "Monopterus albus"                        
-#> [30] "Mugil cephalus cephalus"                 
-#> [31] "Mylopharyngodon piceus"                  
-#> [32] "Nipponocypris sieboldii"                 
-#> [33] "Nipponocypris temminckii"                
-#> [34] "Opsariichthys platypus"                  
-#> [35] "Opsariichthys uncirostris uncirostris"   
-#> [36] "Oryzias latipes"                         
-#> [37] "Plecoglossus altivelis altivelis"        
-#> [38] "Pseudogobio spp."                        
-#> [39] "Pseudorasbora parva"                     
-#> [40] "Rhinogobius spp."                        
-#> [41] "Rhodeus ocellatus ocellatus"             
-#> [42] "Salangichthys microdon"                  
+#>  [1] "Abbottina rivularis"
+#>  [2] "Acanthogobius lactipes"
+#>  [3] "Acheilognathus macropterus"
+#>  [4] "Acheilognathus rhombeus"
+#>  [5] "Anguilla japonica"
+#>  [6] "Biwia zezera"
+#>  [7] "Carassius cuvieri"
+#>  [8] "Carassius spp."
+#>  [9] "Channa argus"
+#> [10] "Ctenopharyngodon idella"
+#> [11] "Cyprinus carpio"
+#> [12] "Gambusia affinis"
+#> [13] "Gnathopogon spp."
+#> [14] "Gymnogobius castaneus"
+#> [15] "Gymnogobius petschiliensis"
+#> [16] "Gymnogobius urotaenia"
+#> [17] "Hemibarbus spp."
+#> [18] "Hypomesus nipponensis"
+#> [19] "Hypophthalmichthys spp."
+#> [20] "Hyporhamphus intermedius"
+#> [21] "Ictalurus punctatus"
+#> [22] "Ischikauia steenackeri"
+#> [23] "Lepomis macrochirus macrochirus"
+#> [24] "Leucopsarion petersii"
+#> [25] "Megalobrama amblycephala"
+#> [26] "Micropterus dolomieu dolomieu"
+#> [27] "Micropterus salmoides"
+#> [28] "Misgurnus spp."
+#> [29] "Monopterus albus"
+#> [30] "Mugil cephalus cephalus"
+#> [31] "Mylopharyngodon piceus"
+#> [32] "Nipponocypris sieboldii"
+#> [33] "Nipponocypris temminckii"
+#> [34] "Opsariichthys platypus"
+#> [35] "Opsariichthys uncirostris uncirostris"
+#> [36] "Oryzias latipes"
+#> [37] "Plecoglossus altivelis altivelis"
+#> [38] "Pseudogobio spp."
+#> [39] "Pseudorasbora parva"
+#> [40] "Rhinogobius spp."
+#> [41] "Rhodeus ocellatus ocellatus"
+#> [42] "Salangichthys microdon"
 #> [43] "Sarcocheilichthys variegatus microoculus"
-#> [44] "Silurus asotus"                          
-#> [45] "Squalidus chankaensis biwae"             
-#> [46] "Tachysurus tokiensis"                    
-#> [47] "Tanakia lanceolata"                      
-#> [48] "Tribolodon brandtii maruta"              
-#> [49] "Tribolodon hakonensis"                   
-#> [50] "Tridentiger spp."                        
-#> 
+#> [44] "Silurus asotus"
+#> [45] "Squalidus chankaensis biwae"
+#> [46] "Tachysurus tokiensis"
+#> [47] "Tanakia lanceolata"
+#> [48] "Tribolodon brandtii maruta"
+#> [49] "Tribolodon hakonensis"
+#> [50] "Tridentiger spp."
+#>
 #> $label$Site
 #>  [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10" "11" "12" "13" "14" "15"
 #> [16] "16" "17" "18" "19" "20" "21" "22" "23" "24" "25" "26" "27" "28" "29" "30"
 #> [31] "31" "32" "33" "34" "35" "36" "37" "38" "39" "40" "41" "42" "43" "44" "45"
 #> [46] "46" "47" "48" "49" "50"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  post_sample_psi[, 1, 1]
+## ----eval = FALSE-------------------------------------------------------------
+# post_sample_psi[, 1, 1]
 
 ## -----------------------------------------------------------------------------
 #>  [1] 0.6673664 0.7505735 0.6416083 0.7011978 0.5935338 0.6087940 0.6159829
@@ -371,143 +375,145 @@ set.seed(1)
 #> [22] 0.5947020 0.4880676 0.6958859 0.6202520 0.5487584 0.6781225 0.7073072
 #> (Omitted the remaining)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  predict_psi <- predict(fit1, parameter = "psi", type = "quantiles")
-#  dim(predict_psi)
+## ----eval = FALSE-------------------------------------------------------------
+# predict_psi <- predict(fit1, parameter = "psi", type = "quantiles")
+# dim(predict_psi)
 
 ## -----------------------------------------------------------------------------
 #> [1]  3 50 50
 
-## ---- eval = FALSE------------------------------------------------------------
-#  attributes(predict_psi)
+## ----eval = FALSE-------------------------------------------------------------
+# attributes(predict_psi)
 
 ## -----------------------------------------------------------------------------
 #> $dim
 #> [1]  3 50 50
-#> 
+#>
 #> $dimnames
 #> $dimnames[[1]]
 #> [1] "50%"   "2.5%"  "97.5%"
-#> 
+#>
 #> $dimnames[[2]]
 #> NULL
-#> 
+#>
 #> $dimnames[[3]]
 #> NULL
-#> 
-#> 
+#>
+#>
 #> $parameter
 #> [1] "psi"
-#> 
+#>
 #> $scale
 #> [1] "response"
-#> 
+#>
 #> $dimension
-#> [1] "Statistics" "Species"    "Sites"     
-#> 
+#> [1] "Statistics" "Species"    "Sites"
+#>
 #> $label
 #> $label$Statistics
 #> [1] "50%"   "2.5%"  "97.5%"
-#> 
+#>
 #> $label$Species
-#>  [1] "Abbottina rivularis"                     
-#>  [2] "Acanthogobius lactipes"                  
-#>  [3] "Acheilognathus macropterus"              
-#>  [4] "Acheilognathus rhombeus"                 
-#>  [5] "Anguilla japonica"                       
-#>  [6] "Biwia zezera"                            
-#>  [7] "Carassius cuvieri"                       
-#>  [8] "Carassius spp."                          
-#>  [9] "Channa argus"                            
-#> [10] "Ctenopharyngodon idella"                 
-#> [11] "Cyprinus carpio"                         
-#> [12] "Gambusia affinis"                        
-#> [13] "Gnathopogon spp."                        
-#> [14] "Gymnogobius castaneus"                   
-#> [15] "Gymnogobius petschiliensis"              
-#> [16] "Gymnogobius urotaenia"                   
-#> [17] "Hemibarbus spp."                         
-#> [18] "Hypomesus nipponensis"                   
-#> [19] "Hypophthalmichthys spp."                 
-#> [20] "Hyporhamphus intermedius"                
-#> [21] "Ictalurus punctatus"                     
-#> [22] "Ischikauia steenackeri"                  
-#> [23] "Lepomis macrochirus macrochirus"         
-#> [24] "Leucopsarion petersii"                   
-#> [25] "Megalobrama amblycephala"                
-#> [26] "Micropterus dolomieu dolomieu"           
-#> [27] "Micropterus salmoides"                   
-#> [28] "Misgurnus spp."                          
-#> [29] "Monopterus albus"                        
-#> [30] "Mugil cephalus cephalus"                 
-#> [31] "Mylopharyngodon piceus"                  
-#> [32] "Nipponocypris sieboldii"                 
-#> [33] "Nipponocypris temminckii"                
-#> [34] "Opsariichthys platypus"                  
-#> [35] "Opsariichthys uncirostris uncirostris"   
-#> [36] "Oryzias latipes"                         
-#> [37] "Plecoglossus altivelis altivelis"        
-#> [38] "Pseudogobio spp."                        
-#> [39] "Pseudorasbora parva"                     
-#> [40] "Rhinogobius spp."                        
-#> [41] "Rhodeus ocellatus ocellatus"             
-#> [42] "Salangichthys microdon"                  
+#>  [1] "Abbottina rivularis"
+#>  [2] "Acanthogobius lactipes"
+#>  [3] "Acheilognathus macropterus"
+#>  [4] "Acheilognathus rhombeus"
+#>  [5] "Anguilla japonica"
+#>  [6] "Biwia zezera"
+#>  [7] "Carassius cuvieri"
+#>  [8] "Carassius spp."
+#>  [9] "Channa argus"
+#> [10] "Ctenopharyngodon idella"
+#> [11] "Cyprinus carpio"
+#> [12] "Gambusia affinis"
+#> [13] "Gnathopogon spp."
+#> [14] "Gymnogobius castaneus"
+#> [15] "Gymnogobius petschiliensis"
+#> [16] "Gymnogobius urotaenia"
+#> [17] "Hemibarbus spp."
+#> [18] "Hypomesus nipponensis"
+#> [19] "Hypophthalmichthys spp."
+#> [20] "Hyporhamphus intermedius"
+#> [21] "Ictalurus punctatus"
+#> [22] "Ischikauia steenackeri"
+#> [23] "Lepomis macrochirus macrochirus"
+#> [24] "Leucopsarion petersii"
+#> [25] "Megalobrama amblycephala"
+#> [26] "Micropterus dolomieu dolomieu"
+#> [27] "Micropterus salmoides"
+#> [28] "Misgurnus spp."
+#> [29] "Monopterus albus"
+#> [30] "Mugil cephalus cephalus"
+#> [31] "Mylopharyngodon piceus"
+#> [32] "Nipponocypris sieboldii"
+#> [33] "Nipponocypris temminckii"
+#> [34] "Opsariichthys platypus"
+#> [35] "Opsariichthys uncirostris uncirostris"
+#> [36] "Oryzias latipes"
+#> [37] "Plecoglossus altivelis altivelis"
+#> [38] "Pseudogobio spp."
+#> [39] "Pseudorasbora parva"
+#> [40] "Rhinogobius spp."
+#> [41] "Rhodeus ocellatus ocellatus"
+#> [42] "Salangichthys microdon"
 #> [43] "Sarcocheilichthys variegatus microoculus"
-#> [44] "Silurus asotus"                          
-#> [45] "Squalidus chankaensis biwae"             
-#> [46] "Tachysurus tokiensis"                    
-#> [47] "Tanakia lanceolata"                      
-#> [48] "Tribolodon brandtii maruta"              
-#> [49] "Tribolodon hakonensis"                   
-#> [50] "Tridentiger spp."                        
-#> 
+#> [44] "Silurus asotus"
+#> [45] "Squalidus chankaensis biwae"
+#> [46] "Tachysurus tokiensis"
+#> [47] "Tanakia lanceolata"
+#> [48] "Tribolodon brandtii maruta"
+#> [49] "Tribolodon hakonensis"
+#> [50] "Tridentiger spp."
+#>
 #> $label$Sites
 #>  [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10" "11" "12" "13" "14" "15"
 #> [16] "16" "17" "18" "19" "20" "21" "22" "23" "24" "25" "26" "27" "28" "29" "30"
 #> [31] "31" "32" "33" "34" "35" "36" "37" "38" "39" "40" "41" "42" "43" "44" "45"
 #> [46] "46" "47" "48" "49" "50"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  new_y <- array(1, dim = c(50, 2, 1))
-#  new_riverbank <- factor(levels(fish_raw$riverbank))
-#  dimnames(new_y)[[1]] <- dimnames(fish_raw$y)[[1]]
-#  dimnames(new_y)[[2]] <- levels(fish_raw$riverbank)
-#  newdata <- occumbData(y = new_y,
-#                        spec_cov = list(mismatch = fish_raw$mismatch),
-#                        site_cov = list(riverbank = new_riverbank))
+## ----eval = FALSE-------------------------------------------------------------
+# new_y <- array(1, dim = c(50, 2, 1))
+# new_riverbank <- factor(levels(fish_raw$riverbank))
+# dimnames(new_y)[[1]] <- dimnames(fish_raw$y)[[1]]
+# dimnames(new_y)[[2]] <- levels(fish_raw$riverbank)
+# newdata <- occumbData(
+#   y = new_y,
+#   spec_cov = list(mismatch = fish_raw$mismatch),
+#   site_cov = list(riverbank = new_riverbank)
+# )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  summary(newdata)
+## ----eval = FALSE-------------------------------------------------------------
+# summary(newdata)
 
 ## -----------------------------------------------------------------------------
-#> Sequence read counts: 
-#>  Number of species, I = 50 
-#>  Number of sites, J = 2 
-#>  Maximum number of replicates per site, K = 1 
-#>  Number of missing observations = 0 
-#>  Number of replicates per site: 1 (average), 0 (sd) 
-#>  Sequencing depth: 50 (average), 0 (sd) 
-#> 
-#> Species covariates: 
-#>  mismatch (continuous) 
-#> Site covariates: 
-#>  riverbank (categorical) 
-#> Replicate covariates: 
-#>  (None) 
-#> 
-#> Labels for species: 
-#>  Abbottina rivularis, Acanthogobius lactipes, Acheilognathus macropterus, Acheilognathus rhombeus, Anguilla japonica, Biwia zezera, Carassius cuvieri, Carassius spp., Channa argus, Ctenopharyngodon idella, Cyprinus carpio, Gambusia affinis, Gnathopogon spp., Gymnogobius castaneus, Gymnogobius petschiliensis, Gymnogobius urotaenia, Hemibarbus spp., Hypomesus nipponensis, Hypophthalmichthys spp., Hyporhamphus intermedius, Ictalurus punctatus, Ischikauia steenackeri, Lepomis macrochirus macrochirus, Leucopsarion petersii, Megalobrama amblycephala, Micropterus dolomieu dolomieu, Micropterus salmoides, Misgurnus spp., Monopterus albus, Mugil cephalus cephalus, Mylopharyngodon piceus, Nipponocypris sieboldii, Nipponocypris temminckii, Opsariichthys platypus, Opsariichthys uncirostris uncirostris, Oryzias latipes, Plecoglossus altivelis altivelis, Pseudogobio spp., Pseudorasbora parva, Rhinogobius spp., Rhodeus ocellatus ocellatus, Salangichthys microdon, Sarcocheilichthys variegatus microoculus, Silurus asotus, Squalidus chankaensis biwae, Tachysurus tokiensis, Tanakia lanceolata, Tribolodon brandtii maruta, Tribolodon hakonensis, Tridentiger spp. 
-#> Labels for sites: 
-#>  with_vegetation, without_vegetation 
-#> Labels for replicates: 
-#>  (None) 
+#> Sequence read counts:
+#>  Number of species, I = 50
+#>  Number of sites, J = 2
+#>  Maximum number of replicates per site, K = 1
+#>  Number of missing observations = 0
+#>  Number of replicates per site: 1 (average), 0 (sd)
+#>  Sequencing depth: 50 (average), 0 (sd)
+#>
+#> Species covariates:
+#>  mismatch (continuous)
+#> Site covariates:
+#>  riverbank (categorical)
+#> Replicate covariates:
+#>  (None)
+#>
+#> Labels for species:
+#>  Abbottina rivularis, Acanthogobius lactipes, Acheilognathus macropterus, Acheilognathus rhombeus, Anguilla japonica, Biwia zezera, Carassius cuvieri, Carassius spp., Channa argus, Ctenopharyngodon idella, Cyprinus carpio, Gambusia affinis, Gnathopogon spp., Gymnogobius castaneus, Gymnogobius petschiliensis, Gymnogobius urotaenia, Hemibarbus spp., Hypomesus nipponensis, Hypophthalmichthys spp., Hyporhamphus intermedius, Ictalurus punctatus, Ischikauia steenackeri, Lepomis macrochirus macrochirus, Leucopsarion petersii, Megalobrama amblycephala, Micropterus dolomieu dolomieu, Micropterus salmoides, Misgurnus spp., Monopterus albus, Mugil cephalus cephalus, Mylopharyngodon piceus, Nipponocypris sieboldii, Nipponocypris temminckii, Opsariichthys platypus, Opsariichthys uncirostris uncirostris, Oryzias latipes, Plecoglossus altivelis altivelis, Pseudogobio spp., Pseudorasbora parva, Rhinogobius spp., Rhodeus ocellatus ocellatus, Salangichthys microdon, Sarcocheilichthys variegatus microoculus, Silurus asotus, Squalidus chankaensis biwae, Tachysurus tokiensis, Tanakia lanceolata, Tribolodon brandtii maruta, Tribolodon hakonensis, Tridentiger spp.
+#> Labels for sites:
+#>  with_vegetation, without_vegetation
+#> Labels for replicates:
+#>  (None)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  predict(fit1, newdata = newdata, parameter = "psi", type = "quantiles")
+## ----eval = FALSE-------------------------------------------------------------
+# predict(fit1, newdata = newdata, parameter = "psi", type = "quantiles")
 
 ## -----------------------------------------------------------------------------
 #> , , 1
-#> 
+#>
 #>            [,1]      [,2]      [,3]       [,4]       [,5]       [,6]      [,7]
 #> 50%   0.6615133 0.2751231 0.3827295 0.15224665 0.17718177 0.09182312 0.8490621
 #> 2.5%  0.4802434 0.1300821 0.2306797 0.05507663 0.06783645 0.02441254 0.7212899
@@ -540,9 +546,9 @@ set.seed(1)
 #> 50%   0.9885246
 #> 2.5%  0.9521853
 #> 97.5% 0.9984315
-#> 
+#>
 #> , , 2
-#> 
+#>
 #>            [,1]       [,2]       [,3]       [,4]       [,5]       [,6]
 #> 50%   0.4756873 0.16831019 0.17344502 0.06827157 0.08065680 0.03799725
 #> 2.5%  0.3210251 0.07468112 0.08268459 0.02152790 0.02558621 0.00904520
@@ -575,92 +581,94 @@ set.seed(1)
 #> 50%   0.08990812 0.13653424 0.05038579 0.9428926
 #> 2.5%  0.03330197 0.05777936 0.01466287 0.8401821
 #> 97.5% 0.20500919 0.25327092 0.12890174 0.9873862
-#> 
+#>
 #> attr(,"parameter")
 #> [1] "psi"
 #> attr(,"scale")
 #> [1] "response"
 #> attr(,"dimension")
-#> [1] "Statistics" "Species"    "Sites"     
+#> [1] "Statistics" "Species"    "Sites"
 #> attr(,"label")
 #> attr(,"label")$Statistics
 #> [1] "50%"   "2.5%"  "97.5%"
-#> 
+#>
 #> attr(,"label")$Species
-#>  [1] "Abbottina rivularis"                     
-#>  [2] "Acanthogobius lactipes"                  
-#>  [3] "Acheilognathus macropterus"              
-#>  [4] "Acheilognathus rhombeus"                 
-#>  [5] "Anguilla japonica"                       
-#>  [6] "Biwia zezera"                            
-#>  [7] "Carassius cuvieri"                       
-#>  [8] "Carassius spp."                          
-#>  [9] "Channa argus"                            
-#> [10] "Ctenopharyngodon idella"                 
-#> [11] "Cyprinus carpio"                         
-#> [12] "Gambusia affinis"                        
-#> [13] "Gnathopogon spp."                        
-#> [14] "Gymnogobius castaneus"                   
-#> [15] "Gymnogobius petschiliensis"              
-#> [16] "Gymnogobius urotaenia"                   
-#> [17] "Hemibarbus spp."                         
-#> [18] "Hypomesus nipponensis"                   
-#> [19] "Hypophthalmichthys spp."                 
-#> [20] "Hyporhamphus intermedius"                
-#> [21] "Ictalurus punctatus"                     
-#> [22] "Ischikauia steenackeri"                  
-#> [23] "Lepomis macrochirus macrochirus"         
-#> [24] "Leucopsarion petersii"                   
-#> [25] "Megalobrama amblycephala"                
-#> [26] "Micropterus dolomieu dolomieu"           
-#> [27] "Micropterus salmoides"                   
-#> [28] "Misgurnus spp."                          
-#> [29] "Monopterus albus"                        
-#> [30] "Mugil cephalus cephalus"                 
-#> [31] "Mylopharyngodon piceus"                  
-#> [32] "Nipponocypris sieboldii"                 
-#> [33] "Nipponocypris temminckii"                
-#> [34] "Opsariichthys platypus"                  
-#> [35] "Opsariichthys uncirostris uncirostris"   
-#> [36] "Oryzias latipes"                         
-#> [37] "Plecoglossus altivelis altivelis"        
-#> [38] "Pseudogobio spp."                        
-#> [39] "Pseudorasbora parva"                     
-#> [40] "Rhinogobius spp."                        
-#> [41] "Rhodeus ocellatus ocellatus"             
-#> [42] "Salangichthys microdon"                  
+#>  [1] "Abbottina rivularis"
+#>  [2] "Acanthogobius lactipes"
+#>  [3] "Acheilognathus macropterus"
+#>  [4] "Acheilognathus rhombeus"
+#>  [5] "Anguilla japonica"
+#>  [6] "Biwia zezera"
+#>  [7] "Carassius cuvieri"
+#>  [8] "Carassius spp."
+#>  [9] "Channa argus"
+#> [10] "Ctenopharyngodon idella"
+#> [11] "Cyprinus carpio"
+#> [12] "Gambusia affinis"
+#> [13] "Gnathopogon spp."
+#> [14] "Gymnogobius castaneus"
+#> [15] "Gymnogobius petschiliensis"
+#> [16] "Gymnogobius urotaenia"
+#> [17] "Hemibarbus spp."
+#> [18] "Hypomesus nipponensis"
+#> [19] "Hypophthalmichthys spp."
+#> [20] "Hyporhamphus intermedius"
+#> [21] "Ictalurus punctatus"
+#> [22] "Ischikauia steenackeri"
+#> [23] "Lepomis macrochirus macrochirus"
+#> [24] "Leucopsarion petersii"
+#> [25] "Megalobrama amblycephala"
+#> [26] "Micropterus dolomieu dolomieu"
+#> [27] "Micropterus salmoides"
+#> [28] "Misgurnus spp."
+#> [29] "Monopterus albus"
+#> [30] "Mugil cephalus cephalus"
+#> [31] "Mylopharyngodon piceus"
+#> [32] "Nipponocypris sieboldii"
+#> [33] "Nipponocypris temminckii"
+#> [34] "Opsariichthys platypus"
+#> [35] "Opsariichthys uncirostris uncirostris"
+#> [36] "Oryzias latipes"
+#> [37] "Plecoglossus altivelis altivelis"
+#> [38] "Pseudogobio spp."
+#> [39] "Pseudorasbora parva"
+#> [40] "Rhinogobius spp."
+#> [41] "Rhodeus ocellatus ocellatus"
+#> [42] "Salangichthys microdon"
 #> [43] "Sarcocheilichthys variegatus microoculus"
-#> [44] "Silurus asotus"                          
-#> [45] "Squalidus chankaensis biwae"             
-#> [46] "Tachysurus tokiensis"                    
-#> [47] "Tanakia lanceolata"                      
-#> [48] "Tribolodon brandtii maruta"              
-#> [49] "Tribolodon hakonensis"                   
-#> [50] "Tridentiger spp."                        
-#> 
+#> [44] "Silurus asotus"
+#> [45] "Squalidus chankaensis biwae"
+#> [46] "Tachysurus tokiensis"
+#> [47] "Tanakia lanceolata"
+#> [48] "Tribolodon brandtii maruta"
+#> [49] "Tribolodon hakonensis"
+#> [50] "Tridentiger spp."
+#>
 #> attr(,"label")$Sites
 #> [1] "with_vegetation"    "without_vegetation"
 
-## ---- eval = FALSE------------------------------------------------------------
-#  gof_result <- gof(fit1, cores = 4)
+## ----eval = FALSE-------------------------------------------------------------
+# gof_result <- gof(fit1, cores = 4)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  gof_result
+## ----eval = FALSE-------------------------------------------------------------
+# gof_result
 
 ## -----------------------------------------------------------------------------
 #> Posterior predictive check for an occumbFit object:
-#>  Statistics: Freeman-Tukey 
-#>  p-value:    0.2005 
-#>  Discrepancy statistics for observed data:   542.81 (mean), 17.92 (sd) 
-#>  Discrepancy statistics for replicated data: 523.28 (mean), 16.47 (sd) 
+#>  Statistics: Freeman-Tukey
+#>  p-value:    0.2005
+#>  Discrepancy statistics for observed data:   542.81 (mean), 17.92 (sd)
+#>  Discrepancy statistics for replicated data: 523.28 (mean), 16.47 (sd)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  plot(gof_result)
+## ----eval = FALSE-------------------------------------------------------------
+# plot(gof_result)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  utilL1 <- eval_util_L(expand.grid(K = 1:3, N = c(1E3, 1E4, 1E5)),
-#                        fit1, cores = 4)
-#  utilL1
+## ----eval = FALSE-------------------------------------------------------------
+# utilL1 <- eval_util_L(expand.grid(K = 1:3, N = c(1E3, 1E4, 1E5)),
+#   fit1,
+#   cores = 4
+# )
+# utilL1
 
 ## -----------------------------------------------------------------------------
 #>   K     N  Utility
@@ -674,13 +682,15 @@ set.seed(1)
 #> 8 2 1e+05 18.20935
 #> 9 3 1e+05 19.23478
 
-## ---- eval = FALSE------------------------------------------------------------
-#  settings <- list_cond_L(budget = 875 * 1E3,
-#                          lambda1 = 0.01,
-#                          lambda2 = 5000,
-#                          fit1)
-#  utilL2 <- eval_util_L(settings, fit1, cores = 4)
-#  utilL2
+## ----eval = FALSE-------------------------------------------------------------
+# settings <- list_cond_L(
+#   budget = 875 * 1E3,
+#   lambda1 = 0.01,
+#   lambda2 = 5000,
+#   fit1
+# )
+# utilL2 <- eval_util_L(settings, fit1, cores = 4)
+# utilL2
 
 ## -----------------------------------------------------------------------------
 #>   budget lambda1 lambda2 K          N  Utility
@@ -688,10 +698,12 @@ set.seed(1)
 #> 2 875000    0.01    5000 2  375000.00 18.37862
 #> 3 875000    0.01    5000 3   83333.33 19.21953
 
-## ---- eval = FALSE------------------------------------------------------------
-#  utilR1 <- eval_util_R(expand.grid(J = 1:3, K = 1:3, N = c(1E3, 1E4, 1E5)),
-#                        fit1, cores = 4)
-#  utilR1
+## ----eval = FALSE-------------------------------------------------------------
+# utilR1 <- eval_util_R(expand.grid(J = 1:3, K = 1:3, N = c(1E3, 1E4, 1E5)),
+#   fit1,
+#   cores = 4
+# )
+# utilR1
 
 ## -----------------------------------------------------------------------------
 #> 1  1 1 1e+03 13.06227
@@ -722,15 +734,17 @@ set.seed(1)
 #> 26 2 3 1e+05 25.85813
 #> 27 3 3 1e+05 29.68874
 
-## ---- eval = FALSE------------------------------------------------------------
-#  settings <- list_cond_R(budget = 1125 * 1E3,
-#                          lambda1 = 0.01,
-#                          lambda2 = 5000,
-#                          lambda3 = 5000,
-#                          J = seq(5, 50, 5),
-#                          K = 1:4)
-#  utilR2 <- eval_util_R(settings, fit1, cores = 4)
-#  utilR2
+## ----eval = FALSE-------------------------------------------------------------
+# settings <- list_cond_R(
+#   budget = 1125 * 1E3,
+#   lambda1 = 0.01,
+#   lambda2 = 5000,
+#   lambda3 = 5000,
+#   J = seq(5, 50, 5),
+#   K = 1:4
+# )
+# utilR2 <- eval_util_R(settings, fit1, cores = 4)
+# utilR2
 
 ## -----------------------------------------------------------------------------
 #>     budget lambda1 lambda2 lambda3  J K           N  Utility

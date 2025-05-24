@@ -6,8 +6,7 @@ setClass("occumbGof",
                    stats_rep = "numeric"))
 
 #' @title Goodness-of-fit assessment of the fitted model.
-#' 
-#' @description \code{gof()} calculates omnibus discrepancy measures and 
+#' @description \code{gof()} calculates omnibus discrepancy measures and
 #'  their Bayesian \eqn{p}-values for the fitted model using the posterior
 #'  predictive check approach.
 #' @details
@@ -17,6 +16,7 @@ setClass("occumbGof",
 #'      \describe{
 #'          \item{Freeman-Tukey statistics (default)}{\eqn{T_{\textrm{FT}} = \sum_{i,j,k}\left(\sqrt{y_{ijk}} - \sqrt{E(y_{ijk} \mid \pi_{ijk})}\right)^2}{T_{FT} = \sum_{i, j, k} (sqrt(y[i, j, k]) - sqrt(E(y[i, j, k] | pi[i, j, k])))^2}}
 #'          \item{Deviance statistics}{\eqn{T_{\textrm{deviance}} = -2 \sum_{j,k} \log \textrm{Multinomial}(\boldsymbol{y}_{jk} \mid \boldsymbol{\pi}_{jk})}{T_{deviance} = -2 * \sum_{j, k} log(Multinomial(y[, j, k] | pi[, j, k]))}}
+#'          \item{Chi-squared statistics}{\eqn{T_{\chi^2} = \sum_{i,j,k}\frac{\left(y_{ijk} - E(y_{ijk} \mid \pi_{ijk})\right)^2}{E(y_{ijk} \mid \pi_{ijk})}}{T_{chi_squared} = \sum_{i, j, k} (y[i, j, k] - E(y[i, j, k] | pi[i, j, k]))^2 / E(y[i, j, k] | pi[i, j, k])}}
 #'      }
 #'  where \eqn{i}, \eqn{j}, and \eqn{k} are the subscripts of species, site, and
 #'  replicate, respectively,
@@ -59,7 +59,7 @@ setClass("occumbGof",
 #'
 #'  A. Gelman, J. B. Carlin, H. S. Stern D. B. Dunson, A. Vehtari and
 #'  D. B. Rubin (2013) \emph{Bayesian Data Analysis}. 3rd edition.
-#'  Chapman and Hall/CRC. \url{http://www.stat.columbia.edu/~gelman/book/}
+#'  Chapman and Hall/CRC. \url{https://www.stat.columbia.edu/~gelman/book/}
 #'
 #'  M. Kéry and J. A. Royle (2016) \emph{Applied Hierarchical Modeling in
 #'  Ecology --- Analysis of Distribution, Abundance and Species Richness in R
@@ -77,169 +77,176 @@ setClass("occumbGof",
 #'     site_cov = list(cov2 = rnorm(J),
 #'                     cov3 = factor(1:J)),
 #'     repl_cov = list(cov4 = matrix(rnorm(J * K), J, K)))
-#' 
 #' # Fitting a null model
 #' fit <- occumb(data = data)
-#' 
 #' # Goodness-of-fit assessment
 #' gof_result <- gof(fit)
 #' gof_result
 #' }
 #' @export
 gof <- function(fit,
-                stats = c("Freeman_Tukey", "deviance"),
+                stats = c("Freeman_Tukey", "deviance", "chi_squared"),
                 cores = 1L,
                 plot = TRUE, ...) {
 
-    # Validate arguments
-    assert_occumbFit(fit)
-    stats <- match.arg(stats)
+  # Validate arguments
+  assert_occumbFit(fit)
+  stats <- match.arg(stats)
 
-    # Set constants
-    y <- get_data(fit, "y")
-    I <- dim(y)[1]; J <- dim(y)[2]; K <- dim(y)[3]
-    N <- apply(y, c(2, 3), sum)
+  # Set constants
+  y <- get_data(fit, "y")
+  N <- apply(y, c(2, 3), sum)
 
-    pi <- get_post_samples(fit, "pi")
-    M  <- dim(pi)[1]
+  pi <- get_post_samples(fit, "pi")
+  M  <- dim(pi)[1]
 
-    # Generate replicate data and calculate fit statistics
-    if (cores == 1) {
-        y_rep <- lapply(X = seq_len(M),
-                        FUN = get_y_rep,
-                        y = y,
-                        N = N,
-                        pi = pi)
-        stats_obs <- unlist(
-            lapply(X = seq_len(M),
-                   FUN = get_stats,
-                   stats = stats,
-                   y = y,
-                   N = N,
-                   pi = pi)
-        )
-        stats_rep <- unlist(
-            lapply(X = seq_len(M),
-                   FUN = .get_stats,
-                   stats = stats,
-                   y_rep = y_rep,
-                   N = N,
-                   pi = pi)
-        )
-    } else {
-        if (.Platform$OS.type == "windows") {
-            # On Windows use makePSOCKcluster() and parLapply() for multiple cores
-            cl <- parallel::makePSOCKcluster(cores)
-            parallel::clusterEvalQ(cl, library(occumb))
-            on.exit(parallel::stopCluster(cl))
-            y_rep <- parallel::parLapply(cl = cl,
-                                         X = seq_len(M),
-                                         fun = get_y_rep,
-                                         y = y,
-                                         N = N,
-                                         pi = pi)
-
-            stats_obs <- unlist(
-                parallel::parLapply(cl = cl,
-                                    X = seq_len(M),
-                                    fun = get_stats,
-                                    stats = stats,
-                                    y = y,
-                                    N = N,
-                                    pi = pi)
-            )
-
-            stats_rep <- unlist(
-                parallel::parLapply(cl = cl,
-                                    X = seq_len(M),
-                                    fun = .get_stats,
-                                    stats = stats,
-                                    y_rep = y_rep,
-                                    N = N,
-                                    pi = pi)
-            )
-        } else {
-            # On Mac or Linux use mclapply() for multiple cores
-            y_rep <- parallel::mclapply(mc.cores = cores,
-                                        X = seq_len(M),
-                                        FUN = get_y_rep,
-                                        y = y,
-                                        N = N,
-                                        pi = pi)
-
-            stats_obs <- unlist(
-                parallel::mclapply(mc.cores = cores,
+  # Generate replicate data and calculate fit statistics
+  if (cores == 1) {
+    y_rep <- lapply(X = seq_len(M),
+                    FUN = get_y_rep,
+                    y = y,
+                    N = N,
+                    pi = pi)
+    stats_obs <- unlist(
+      lapply(X = seq_len(M),
+             FUN = get_stats,
+             stats = stats,
+             y = y,
+             N = N,
+             pi = pi)
+    )
+    stats_rep <- unlist(
+      lapply(X = seq_len(M),
+             FUN = .get_stats,
+             stats = stats,
+             y_rep = y_rep,
+             N = N,
+             pi = pi)
+    )
+  } else {
+    if (.Platform$OS.type == "windows") {
+      # On Windows use makePSOCKcluster() and parLapply() for multiple cores
+      cl <- parallel::makePSOCKcluster(cores)
+      parallel::clusterEvalQ(cl, library(occumb))
+      on.exit(parallel::stopCluster(cl))
+      y_rep <- parallel::parLapply(cl = cl,
                                    X = seq_len(M),
-                                   FUN = get_stats,
-                                   stats = stats,
+                                   fun = get_y_rep,
                                    y = y,
                                    N = N,
                                    pi = pi)
-            )
 
-            stats_rep <- unlist(
-                parallel::mclapply(mc.cores = cores,
-                                   X = seq_len(M),
-                                   FUN = .get_stats,
-                                   stats = stats,
-                                   y_rep = y_rep,
-                                   N = N,
-                                   pi = pi)
-            )
-        }
+      stats_obs <- unlist(
+        parallel::parLapply(cl = cl,
+                            X = seq_len(M),
+                            fun = get_stats,
+                            stats = stats,
+                            y = y,
+                            N = N,
+                            pi = pi)
+      )
+
+      stats_rep <- unlist(
+        parallel::parLapply(cl = cl,
+                            X = seq_len(M),
+                            fun = .get_stats,
+                            stats = stats,
+                            y_rep = y_rep,
+                            N = N,
+                            pi = pi)
+      )
+    } else {
+      # On Mac or Linux use mclapply() for multiple cores
+      y_rep <- parallel::mclapply(mc.cores = cores,
+                                  X = seq_len(M),
+                                  FUN = get_y_rep,
+                                  y = y,
+                                  N = N,
+                                  pi = pi)
+
+      stats_obs <- unlist(
+        parallel::mclapply(mc.cores = cores,
+                           X = seq_len(M),
+                           FUN = get_stats,
+                           stats = stats,
+                           y = y,
+                           N = N,
+                           pi = pi)
+      )
+
+      stats_rep <- unlist(
+        parallel::mclapply(mc.cores = cores,
+                           X = seq_len(M),
+                           FUN = .get_stats,
+                           stats = stats,
+                           y_rep = y_rep,
+                           N = N,
+                           pi = pi)
+      )
     }
+  }
 
-    # Output (plot and object)
-    if (plot) plot_gof(stats_obs, stats_rep, stats, ...)
-    out <- methods::new("occumbGof",
-                        stats = stats,
-                        p_value = Bayesian_p_value(stats_obs, stats_rep),
-                        stats_obs = stats_obs,
-                        stats_rep = stats_rep)
-    out
+  # Output (plot and object)
+  if (plot) plot_gof(stats_obs, stats_rep, stats, ...)
+  out <- methods::new("occumbGof",
+                      stats = stats,
+                      p_value = Bayesian_p_value(stats_obs, stats_rep),
+                      stats_obs = stats_obs,
+                      stats_rep = stats_rep)
+  out
 }
 
 # Fit statistics --------------------------------------------------------------
 Freeman_Tukey <- function(y, N, pi) {
-    sum((sqrt(y) - sqrt(N * pi))^2)
+  sum((sqrt(y) - sqrt(N * pi))^2)
+}
+chi_squared <- function(y, N, pi) {
+  x <- (y - N * pi)^2 / (N * pi)
+  sum(x[!is.nan(x)])
 }
 # -----------------------------------------------------------------------------
 
 # Generate replicate data
 get_y_rep <- function(m, y, N, pi) {
-    I <- dim(y)[1]; J <- dim(y)[2]; K <- dim(y)[3]
-    y_rep_m <- array(dim = c(I, J, K))
-    for (j in seq_len(J)) {
-        for (k in seq_len(K)) {
-            if (N[j, k] > 0) {
-                y_rep_m[, j, k] <- stats::rmultinom(1, N[j, k], pi[m, , j, k])
-            } else {
-                y_rep_m[, j, k] <- 0
-            }
-        }
+  I <- dim(y)[1]
+  J <- dim(y)[2]
+  K <- dim(y)[3]
+  y_rep_m <- array(dim = c(I, J, K))
+  for (j in seq_len(J)) {
+    for (k in seq_len(K)) {
+      if (N[j, k] > 0) {
+        y_rep_m[, j, k] <- stats::rmultinom(1, N[j, k], pi[m, , j, k])
+      } else {
+        y_rep_m[, j, k] <- 0
+      }
     }
-    y_rep_m
+  }
+  y_rep_m
 }
 
 # Calculate fit statistics
 .get_stats <- function(m, stats, y_rep, N, pi) {
-    get_stats(m, stats, y_rep[[m]], N, pi)
+  get_stats(m, stats, y_rep[[m]], N, pi)
 }
 
 get_stats <- function(m, stats, y, N, pi) {
-    J <- dim(y)[2]; K <- dim(y)[3]
-    stats_m <- matrix(nrow = J, ncol = K)
-    for (j in seq_len(J)) {
-        for (k in seq_len(K)) {
-            if (stats == "Freeman_Tukey") {
-                stats_m[j, k]  <- Freeman_Tukey(y[, j, k], N[j, k], pi[m, , j, k])
-            }
-            if (stats == "deviance") {
-                stats_m[j, k] <- -2 * llmulti(y[, j, k], N[j, k], pi[m, , j, k])
-            }
-        }
+  J <- dim(y)[2]
+  K <- dim(y)[3]
+  stats_m <- matrix(nrow = J, ncol = K)
+  for (j in seq_len(J)) {
+    for (k in seq_len(K)) {
+      if (stats == "Freeman_Tukey") {
+        stats_m[j, k]  <- Freeman_Tukey(y[, j, k], N[j, k], pi[m, , j, k])
+      }
+      if (stats == "deviance") {
+        stats_m[j, k] <- -2 * llmulti(y[, j, k], N[j, k], pi[m, , j, k])
+      }
+      if (stats == "chi_squared") {
+        stats_m[j, k]  <- chi_squared(y[, j, k], N[j, k], pi[m, , j, k])
+      }
     }
-    sum(stats_m)
+  }
+  sum(stats_m)
 }
 
 # Calculate Bayesian p-values
@@ -247,14 +254,19 @@ Bayesian_p_value <- function(stat_obs, stat_rep) mean(stat_obs < stat_rep)
 
 # Plot function
 plot_gof <- function(stat_obs, stat_rep, statistics, ...) {
-    pval <- Bayesian_p_value(stat_obs, stat_rep)
-    stats_print <- ifelse(statistics == "Freeman_Tukey", "Freeman-Tukey", statistics)
-    plot(stat_rep ~ stat_obs,
-         xlim = range(c(stat_obs, stat_rep)),
-         ylim = range(c(stat_obs, stat_rep)),
-         main = paste(stats_print, "statistics | Bayesian p-value =", round(pval, 5)),
-         xlab = paste("Statistics for observed data"),
-         ylab = paste("Statistics for replicated data"), ...)
-    graphics::abline(a = 0, b = 1)
+  pval <- Bayesian_p_value(stat_obs, stat_rep)
+  stats_print <- if (statistics == "Freeman_Tukey") {
+    "Freeman-Tukey"
+  } else if (statistics == "deviance") {
+    "deviance"
+  } else if (statistics == "chi_squared") {
+    "chi-squared"
+  }
+  plot(stat_rep ~ stat_obs,
+       xlim = range(c(stat_obs, stat_rep)),
+       ylim = range(c(stat_obs, stat_rep)),
+       main = paste(stats_print, "statistics | Bayesian p-value =", round(pval, 5)),
+       xlab = paste("Statistics for observed data"),
+       ylab = paste("Statistics for replicated data"), ...)
+  graphics::abline(a = 0, b = 1)
 }
-

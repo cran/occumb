@@ -1,3 +1,11 @@
+## occumb 1.2.0 (2025/5/23)
+* Add a data frame input option in `occumbData()`.
+* Add a data frame output option in `get_post_samples()` and `get_post_summary()`.
+* Add a data frame output option in `predict()`.
+* Add `stats = chi_squared` option to `gof()`.
+* Internal changes to fix a number of known bugs, more helpful error messages, and additional testing.
+* Improved function documentation.
+
 ## occumb 1.1.0 (2024/3/26)
 * Add `predict()` method for `occumbFit` class.
 * Fix `summary()` method for `occumbFit`: no longer outputs comments on convergence and DIC.

@@ -1,7 +1,12 @@
 ### Test data ------------------------------------------------------------------
-I <- 2; J <- 3; K <- 4
-y <- array(sample.int(I * J * K), dim = c(I, J, K))
+I <- 2
+J <- 3
+K <- 4
+N <- 5
+y <- y_unnamed <- array(sample.int(I * J * K), dim = c(I, J, K))
 dimnames(y)[[1]] <- sprintf("species %s", 1:I)
+dimnames(y)[[2]] <- sprintf("site %s", 1:J)
+dimnames(y)[[3]] <- sprintf("replicate %s", 1:K)
 data <- occumbData(y = y,
                    spec_cov = list(cov1 = rnorm(I),
                                    cov2 = letters[1:I],
@@ -14,86 +19,104 @@ data <- occumbData(y = y,
                    repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
                                    cov10 = matrix(letters[1:(J * K)], J, K),
                                    cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+data_unnamed <-
+  occumbData(y = y_unnamed,
+             spec_cov = list(cov1 = rnorm(I),
+                             cov2 = letters[1:I],
+                             cov3 = factor(1:I),
+                             cov4 = c(TRUE, FALSE)),
+             site_cov = list(cov5 = rnorm(J),
+                             cov6 = letters[1:J],
+                             cov7 = factor(1:J),
+                             cov8 = c(TRUE, FALSE, TRUE)),
+             repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                             cov10 = matrix(letters[1:(J * K)], J, K),
+                             cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+
+### Helper functions -----------------------------------------------------------
+set_parameter_dimension <- function(fit, parameter) {
+  eval(parse(text = paste0("get_modargs(fit)$", parameter)))
+}
 
 ### Tests for check_newdata() --------------------------------------------------
 test_that("check_newdata() works correctly", {
-    fit <- occumb(data = data,
-                  n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
-                  verbose = FALSE)
+  fit <- occumb(data = data,
+                n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
+                verbose = FALSE)
 
-    expect_no_error(check_newdata(data, fit))
+  expect_no_error(check_newdata(data, fit))
 
-    ## Check for mismatches in the number of species
-    newdata <- 
-        occumbData(y = array(sample.int((I + 1) * J * K), dim = c(I + 1, J, K)),
-                   spec_cov = list(cov1 = rnorm(I + 1),
-                                   cov2 = letters[1:(I + 1)],
-                                   cov3 = factor(1:(I + 1)),
-                                   cov4 = c(TRUE, FALSE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit),
-                 "The number of species in 'newdata' \\(3\\) differs from that in the fitted data \\(2\\).")
+  ## Check for mismatches in the number of species
+  newdata <-
+    occumbData(y = array(sample.int((I + 1) * J * K), dim = c(I + 1, J, K)),
+               spec_cov = list(cov1 = rnorm(I + 1),
+                               cov2 = letters[1:(I + 1)],
+                               cov3 = factor(1:(I + 1)),
+                               cov4 = c(TRUE, FALSE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit),
+               "The number of species in 'newdata' \\(3\\) differs from that in the fitted data \\(2\\).")
 
-    ## Check for covariate names and their order
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1x = rnorm(I),
-                                   cov2x = letters[1:I],
-                                   cov3x = factor(1:I),
-                                   cov4x = c(TRUE, FALSE)),
-                   site_cov = list(cov5x = rnorm(J),
-                                   cov6x = letters[1:J],
-                                   cov7x = factor(1:J),
-                                   cov8x = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
-                                   cov10x = matrix(letters[1:(J * K)], J, K),
-                                   cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  ## Check for covariate names and their order
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1x = rnorm(I),
+                               cov2x = letters[1:I],
+                               cov3x = factor(1:I),
+                               cov4x = c(TRUE, FALSE)),
+               site_cov = list(cov5x = rnorm(J),
+                               cov6x = letters[1:J],
+                               cov7x = factor(1:J),
+                               cov8x = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
+                               cov10x = matrix(letters[1:(J * K)], J, K),
+                               cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1x, cov2x, cov3x, cov4x \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov5x, cov6x, cov7x, cov8x \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)
   repl_cov: cov9x, cov10x, cov11x \\(newdata\\); cov9, cov10, cov11 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov2 = rnorm(I),
-                                   cov1 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov6 = rnorm(J),
-                                   cov5 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov2 = rnorm(I),
+                               cov1 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov6 = rnorm(J),
+                               cov5 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov2, cov1, cov3, cov4 \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov6, cov5, cov7, cov8 \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)")
 
-    ## Check for covariate classes
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = letters[1:I],
-                                   cov2 = rnorm(I),
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = c(TRUE, FALSE, TRUE),
-                                   cov8 = factor(1:J)),
-                   repl_cov = list(cov9 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K),
-                                   cov10 = matrix(rnorm(J * K), J, K),
-                                   cov11 = matrix(letters[1:(J * K)], J, K)))
-    expect_error(check_newdata(newdata, fit),
-                 "The covariate classes in 'newdata' must match those in the fitted data.
+  ## Check for covariate classes
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = letters[1:I],
+                               cov2 = rnorm(I),
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = c(TRUE, FALSE, TRUE),
+                               cov8 = factor(1:J)),
+               repl_cov = list(cov9 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K),
+                               cov10 = matrix(rnorm(J * K), J, K),
+                               cov11 = matrix(letters[1:(J * K)], J, K)))
+  expect_error(check_newdata(newdata, fit),
+               "The covariate classes in 'newdata' must match those in the fitted data.
   cov1: character \\(newdata\\), numeric \\(fitted data\\)
   cov2: numeric \\(newdata\\), character \\(fitted data\\)
   cov7: logical \\(newdata\\), factor \\(fitted data\\)
@@ -102,562 +125,562 @@ test_that("check_newdata() works correctly", {
   cov10: numeric \\(newdata\\), character \\(fitted data\\)
   cov11: character \\(newdata\\), logical \\(fitted data\\)")
 
-    ## Check for new levels in discrete covariates
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I + 1],
-                                   cov3 = factor(1:I + 1),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J + 1],
-                                   cov7 = factor(1:J + 1),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K) + 1], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  ## Check for new levels in discrete covariates
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I + 1],
+                               cov3 = factor(1:I + 1),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J + 1],
+                               cov7 = factor(1:J + 1),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K) + 1], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov2: b, c \\(newdata\\); a, b \\(fitted data\\)
   cov3: 2, 3 \\(newdata\\); 1, 2 \\(fitted data\\)
   cov6: b, c, d \\(newdata\\); a, b, c \\(fitted data\\)
   cov7: 2, 3, 4 \\(newdata\\); 1, 2, 3 \\(fitted data\\)
   cov10: b, c, d, e, f, g, h, i, j, k, l, m \\(newdata\\); a, b, c, d, e, f, g, h, i, j, k, l \\(fitted data\\)")
 
-    ## Check for orders of factor levels
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I, levels = I:1),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J, levels = J:1),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  ## Check for orders of factor levels
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I, levels = I:1),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J, levels = J:1),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov3: 1, 2 \\(newdata\\); 1, 2 \\(fitted data\\)
   cov7: 1, 2, 3 \\(newdata\\); 1, 2, 3 \\(fitted data\\)")
 
-    ## Check for mismatches in the list of species names
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_warning(check_newdata(newdata, fit),
+  ## Check for mismatches in the list of species names
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_warning(check_newdata(newdata, fit),
                  "The list of species names in 'newdata' does not match that in the fitted data; the list of species names in the fitted data will be added to the 'label' attribute of the returned object.")
 
 
-    ### Additional tests for check for covariate names and their order
-    ## Without spec_cov
-    data_no_spec_cov <-
-        occumbData(y = y,
-                   spec_cov = NULL,
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  ### Additional tests for check for covariate names and their order
+  ## Without spec_cov
+  data_no_spec_cov <-
+    occumbData(y = y,
+               spec_cov = NULL,
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
 
-    fit_no_spec_cov <-
-        occumb(data = data_no_spec_cov,
-               n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
-               verbose = FALSE)
+  fit_no_spec_cov <-
+    occumb(data = data_no_spec_cov,
+           n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
+           verbose = FALSE)
 
-    expect_no_error(check_newdata(data_no_spec_cov, fit_no_spec_cov))
+  expect_no_error(check_newdata(data_no_spec_cov, fit_no_spec_cov))
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = list(cov5x = rnorm(J),
-                                   cov6x = letters[1:J],
-                                   cov7x = factor(1:J),
-                                   cov8x = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
-                                   cov10x = matrix(letters[1:(J * K)], J, K),
-                                   cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = list(cov5x = rnorm(J),
+                               cov6x = letters[1:J],
+                               cov7x = factor(1:J),
+                               cov8x = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
+                               cov10x = matrix(letters[1:(J * K)], J, K),
+                               cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   site_cov: cov5x, cov6x, cov7x, cov8x \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)
   repl_cov: cov9x, cov10x, cov11x \\(newdata\\); cov9, cov10, cov11 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = list(cov6 = rnorm(J),
-                                   cov5 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = list(cov6 = rnorm(J),
+                               cov5 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   site_cov: cov6, cov5, cov7, cov8 \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I)),
-                   site_cov = list(cov5x = rnorm(J),
-                                   cov6x = letters[1:J],
-                                   cov7x = factor(1:J),
-                                   cov8x = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
-                                   cov10x = matrix(letters[1:(J * K)], J, K),
-                                   cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I)),
+               site_cov = list(cov5x = rnorm(J),
+                               cov6x = letters[1:J],
+                               cov7x = factor(1:J),
+                               cov8x = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
+                               cov10x = matrix(letters[1:(J * K)], J, K),
+                               cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1 \\(newdata\\); \\(None\\) \\(fitted data\\)
   site_cov: cov5x, cov6x, cov7x, cov8x \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)
   repl_cov: cov9x, cov10x, cov11x \\(newdata\\); cov9, cov10, cov11 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I)),
-                   site_cov = list(cov6 = rnorm(J),
-                                   cov5 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I)),
+               site_cov = list(cov6 = rnorm(J),
+                               cov5 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1 \\(newdata\\); \\(None\\) \\(fitted data\\)
   site_cov: cov6, cov5, cov7, cov8 \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)")
 
-    # Check for covariate classes
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = c(TRUE, FALSE, TRUE),
-                                   cov8 = factor(1:J)),
-                   repl_cov = list(cov9 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K),
-                                   cov10 = matrix(rnorm(J * K), J, K),
-                                   cov11 = matrix(letters[1:(J * K)], J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The covariate classes in 'newdata' must match those in the fitted data.
+  # Check for covariate classes
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = c(TRUE, FALSE, TRUE),
+                               cov8 = factor(1:J)),
+               repl_cov = list(cov9 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K),
+                               cov10 = matrix(rnorm(J * K), J, K),
+                               cov11 = matrix(letters[1:(J * K)], J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The covariate classes in 'newdata' must match those in the fitted data.
   cov7: logical \\(newdata\\), factor \\(fitted data\\)
   cov8: factor \\(newdata\\), logical \\(fitted data\\)
   cov9: logical \\(newdata\\), numeric \\(fitted data\\)
   cov10: numeric \\(newdata\\), character \\(fitted data\\)
   cov11: character \\(newdata\\), logical \\(fitted data\\)")
 
-    # Check for new levels in discrete covariates
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J + 1],
-                                   cov7 = factor(1:J + 1),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K) + 1], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  # Check for new levels in discrete covariates
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J + 1],
+                               cov7 = factor(1:J + 1),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K) + 1], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov6: b, c, d \\(newdata\\); a, b, c \\(fitted data\\)
   cov7: 2, 3, 4 \\(newdata\\); 1, 2, 3 \\(fitted data\\)
   cov10: b, c, d, e, f, g, h, i, j, k, l, m \\(newdata\\); a, b, c, d, e, f, g, h, i, j, k, l \\(fitted data\\)")
 
-    # Check for orders of factor levels
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J, levels = J:1),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_spec_cov),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  # Check for orders of factor levels
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J, levels = J:1),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_spec_cov),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov7: 1, 2, 3 \\(newdata\\); 1, 2, 3 \\(fitted data\\)")
 
-    ## Without site_cov
-    data_no_site_cov <-
-        occumbData(y = y,
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  ## Without site_cov
+  data_no_site_cov <-
+    occumbData(y = y,
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
 
-    fit_no_site_cov <-
-        occumb(data = data_no_site_cov,
-               n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
-               verbose = FALSE)
+  fit_no_site_cov <-
+    occumb(data = data_no_site_cov,
+           n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
+           verbose = FALSE)
 
-    expect_no_error(check_newdata(data_no_site_cov, fit_no_site_cov))
+  expect_no_error(check_newdata(data_no_site_cov, fit_no_site_cov))
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1x = rnorm(I),
-                                   cov2x = letters[1:I],
-                                   cov3x = factor(1:I),
-                                   cov4x = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
-                                   cov10x = matrix(letters[1:(J * K)], J, K),
-                                   cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1x = rnorm(I),
+                               cov2x = letters[1:I],
+                               cov3x = factor(1:I),
+                               cov4x = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
+                               cov10x = matrix(letters[1:(J * K)], J, K),
+                               cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1x, cov2x, cov3x, cov4x \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   repl_cov: cov9x, cov10x, cov11x \\(newdata\\); cov9, cov10, cov11 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov2 = rnorm(I),
-                                   cov1 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov2 = rnorm(I),
+                               cov1 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov2, cov1, cov3, cov4 \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1x = rnorm(I),
-                                   cov2x = letters[1:I],
-                                   cov3x = factor(1:I),
-                                   cov4x = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J)),
-                   repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
-                                   cov10x = matrix(letters[1:(J * K)], J, K),
-                                   cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1x = rnorm(I),
+                               cov2x = letters[1:I],
+                               cov3x = factor(1:I),
+                               cov4x = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J)),
+               repl_cov = list(cov9x = matrix(rnorm(J * K), J, K),
+                               cov10x = matrix(letters[1:(J * K)], J, K),
+                               cov11x = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1x, cov2x, cov3x, cov4x \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov5 \\(newdata\\); \\(None\\) \\(fitted data\\)
   repl_cov: cov9x, cov10x, cov11x \\(newdata\\); cov9, cov10, cov11 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov2 = rnorm(I),
-                                   cov1 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov2 = rnorm(I),
+                               cov1 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov2, cov1, cov3, cov4 \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov5 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    # Check for covariate classes
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = letters[1:I],
-                                   cov2 = rnorm(I),
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K),
-                                   cov10 = matrix(rnorm(J * K), J, K),
-                                   cov11 = matrix(letters[1:(J * K)], J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The covariate classes in 'newdata' must match those in the fitted data.
+  # Check for covariate classes
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = letters[1:I],
+                               cov2 = rnorm(I),
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K),
+                               cov10 = matrix(rnorm(J * K), J, K),
+                               cov11 = matrix(letters[1:(J * K)], J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The covariate classes in 'newdata' must match those in the fitted data.
   cov1: character \\(newdata\\), numeric \\(fitted data\\)
   cov2: numeric \\(newdata\\), character \\(fitted data\\)
   cov9: logical \\(newdata\\), numeric \\(fitted data\\)
   cov10: numeric \\(newdata\\), character \\(fitted data\\)
   cov11: character \\(newdata\\), logical \\(fitted data\\)")
 
-    # Check for new levels in discrete covariates
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I + 1],
-                                   cov3 = factor(1:I + 1),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K) + 1], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  # Check for new levels in discrete covariates
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I + 1],
+                               cov3 = factor(1:I + 1),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K) + 1], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov2: b, c \\(newdata\\); a, b \\(fitted data\\)
   cov3: 2, 3 \\(newdata\\); 1, 2 \\(fitted data\\)
   cov10: b, c, d, e, f, g, h, i, j, k, l, m \\(newdata\\); a, b, c, d, e, f, g, h, i, j, k, l \\(fitted data\\)")
 
-    # Check for orders of factor levels
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I, levels = I:1),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_site_cov),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  # Check for orders of factor levels
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I, levels = I:1),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_site_cov),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov3: 1, 2 \\(newdata\\); 1, 2 \\(fitted data\\)")
 
-    ## Without repl_cov
-    data_no_repl_cov <-
-        occumbData(y = y,
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
+  ## Without repl_cov
+  data_no_repl_cov <-
+    occumbData(y = y,
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
 
-    fit_no_repl_cov <-
-        occumb(data = data_no_repl_cov,
-               n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
-               verbose = FALSE)
+  fit_no_repl_cov <-
+    occumb(data = data_no_repl_cov,
+           n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
+           verbose = FALSE)
 
-    expect_no_error(check_newdata(data_no_repl_cov, fit_no_repl_cov))
+  expect_no_error(check_newdata(data_no_repl_cov, fit_no_repl_cov))
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1x = rnorm(I),
-                                   cov2x = letters[1:I],
-                                   cov3x = factor(1:I),
-                                   cov4x = c(TRUE, FALSE)),
-                   site_cov = list(cov5x = rnorm(J),
-                                   cov6x = letters[1:J],
-                                   cov7x = factor(1:J),
-                                   cov8x = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1x = rnorm(I),
+                               cov2x = letters[1:I],
+                               cov3x = factor(1:I),
+                               cov4x = c(TRUE, FALSE)),
+               site_cov = list(cov5x = rnorm(J),
+                               cov6x = letters[1:J],
+                               cov7x = factor(1:J),
+                               cov8x = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1x, cov2x, cov3x, cov4x \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov5x, cov6x, cov7x, cov8x \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov2 = rnorm(I),
-                                   cov1 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov6 = rnorm(J),
-                                   cov5 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov2 = rnorm(I),
+                               cov1 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov6 = rnorm(J),
+                               cov5 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov2, cov1, cov3, cov4 \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov6, cov5, cov7, cov8 \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1x = rnorm(I),
-                                   cov2x = letters[1:I],
-                                   cov3x = factor(1:I),
-                                   cov4x = c(TRUE, FALSE)),
-                   site_cov = list(cov5x = rnorm(J),
-                                   cov6x = letters[1:J],
-                                   cov7x = factor(1:J),
-                                   cov8x = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K)))
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1x = rnorm(I),
+                               cov2x = letters[1:I],
+                               cov3x = factor(1:I),
+                               cov4x = c(TRUE, FALSE)),
+               site_cov = list(cov5x = rnorm(J),
+                               cov6x = letters[1:J],
+                               cov7x = factor(1:J),
+                               cov8x = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K)))
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1x, cov2x, cov3x, cov4x \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov5x, cov6x, cov7x, cov8x \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)
   repl_cov: cov9 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov2 = rnorm(I),
-                                   cov1 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov6 = rnorm(J),
-                                   cov5 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K)))
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov2 = rnorm(I),
+                               cov1 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov6 = rnorm(J),
+                               cov5 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K)))
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov2, cov1, cov3, cov4 \\(newdata\\); cov1, cov2, cov3, cov4 \\(fitted data\\)
   site_cov: cov6, cov5, cov7, cov8 \\(newdata\\); cov5, cov6, cov7, cov8 \\(fitted data\\)
   repl_cov: cov9 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    # Check for covariate classes
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = letters[1:I],
-                                   cov2 = rnorm(I),
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = c(TRUE, FALSE, TRUE),
-                                   cov8 = factor(1:J)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The covariate classes in 'newdata' must match those in the fitted data.
+  # Check for covariate classes
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = letters[1:I],
+                               cov2 = rnorm(I),
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = c(TRUE, FALSE, TRUE),
+                               cov8 = factor(1:J)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The covariate classes in 'newdata' must match those in the fitted data.
   cov1: character \\(newdata\\), numeric \\(fitted data\\)
   cov2: numeric \\(newdata\\), character \\(fitted data\\)
   cov7: logical \\(newdata\\), factor \\(fitted data\\)
   cov8: factor \\(newdata\\), logical \\(fitted data\\)")
 
-    # Check for new levels in discrete covariates
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I + 1],
-                                   cov3 = factor(1:I + 1),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J + 1],
-                                   cov7 = factor(1:J + 1),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  # Check for new levels in discrete covariates
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I + 1],
+                               cov3 = factor(1:I + 1),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J + 1],
+                               cov7 = factor(1:J + 1),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov2: b, c \\(newdata\\); a, b \\(fitted data\\)
   cov3: 2, 3 \\(newdata\\); 1, 2 \\(fitted data\\)
   cov6: b, c, d \\(newdata\\); a, b, c \\(fitted data\\)
   cov7: 2, 3, 4 \\(newdata\\); 1, 2, 3 \\(fitted data\\)")
 
-    # Check for orders of factor levels
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I, levels = I:1),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J, levels = J:1),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_repl_cov),
-                 "The levels of discrete covariates in 'newdata' must match those in the fitted data.
+  # Check for orders of factor levels
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I, levels = I:1),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J, levels = J:1),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_repl_cov),
+               "The levels of discrete covariates in 'newdata' must match those in the fitted data.
   cov3: 1, 2 \\(newdata\\); 1, 2 \\(fitted data\\)
   cov7: 1, 2, 3 \\(newdata\\); 1, 2, 3 \\(fitted data\\)")
 
-    ## Extra covariates in newdata
-    data_no_cov <- occumbData(y = y,
-                              spec_cov = NULL,
-                              site_cov = NULL,
-                              repl_cov = NULL)
+  ## Extra covariates in newdata
+  data_no_cov <- occumbData(y = y,
+                            spec_cov = NULL,
+                            site_cov = NULL,
+                            repl_cov = NULL)
 
-    fit_no_cov <-
-        occumb(data = data_no_cov,
-               n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
-               verbose = FALSE)
+  fit_no_cov <-
+    occumb(data = data_no_cov,
+           n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
+           verbose = FALSE)
 
-    expect_no_error(check_newdata(data_no_cov, fit_no_cov))
+  expect_no_error(check_newdata(data_no_cov, fit_no_cov))
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1, cov2, cov3, cov4 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   site_cov: cov5, cov6, cov7, cov8 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = NULL,
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = NULL,
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
 
-    expect_error(check_newdata(newdata, fit_no_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  expect_error(check_newdata(newdata, fit_no_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   repl_cov: cov9, cov10, cov11 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = NULL)
-    expect_error(check_newdata(newdata, fit_no_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = NULL)
+  expect_error(check_newdata(newdata, fit_no_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1, cov2, cov3, cov4 \\(newdata\\); \\(None\\) \\(fitted data\\)
   site_cov: cov5, cov6, cov7, cov8 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = NULL,
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = NULL,
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1, cov2, cov3, cov4 \\(newdata\\); \\(None\\) \\(fitted data\\)
   repl_cov: cov9, cov10, cov11 \\(newdata\\); \\(None\\) \\(fitted data\\)")
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
-    expect_error(check_newdata(newdata, fit_no_cov),
-                 "The names of the covariates in 'newdata' and their order must match those in the fitted data.
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  expect_error(check_newdata(newdata, fit_no_cov),
+               "The names of the covariates in 'newdata' and their order must match those in the fitted data.
   spec_cov: cov1, cov2, cov3, cov4 \\(newdata\\); \\(None\\) \\(fitted data\\)
   site_cov: cov5, cov6, cov7, cov8 \\(newdata\\); \\(None\\) \\(fitted data\\)
   repl_cov: cov9, cov10, cov11 \\(newdata\\); \\(None\\) \\(fitted data\\)")
@@ -665,2140 +688,765 @@ test_that("check_newdata() works correctly", {
 
 ### Tests for newdata labels ---------------------------------------------------
 test_that("Species labels are copied correctly", {
-    fit <- occumb(data = data,
-                  n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
-                  verbose = FALSE)
+  fit <- occumb(data = data,
+                n.chains = 1, n.burnin = 10, n.thin = 1, n.iter = 20,
+                verbose = FALSE)
 
-    newdata <-
-        occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
-                   spec_cov = list(cov1 = rnorm(I),
-                                   cov2 = letters[1:I],
-                                   cov3 = factor(1:I),
-                                   cov4 = c(TRUE, FALSE)),
-                   site_cov = list(cov5 = rnorm(J),
-                                   cov6 = letters[1:J],
-                                   cov7 = factor(1:J),
-                                   cov8 = c(TRUE, FALSE, TRUE)),
-                   repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
-                                   cov10 = matrix(letters[1:(J * K)], J, K),
-                                   cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
+  newdata <-
+    occumbData(y = array(sample.int(I * J * K), dim = c(I, J, K)),
+               spec_cov = list(cov1 = rnorm(I),
+                               cov2 = letters[1:I],
+                               cov3 = factor(1:I),
+                               cov4 = c(TRUE, FALSE)),
+               site_cov = list(cov5 = rnorm(J),
+                               cov6 = letters[1:J],
+                               cov7 = factor(1:J),
+                               cov8 = c(TRUE, FALSE, TRUE)),
+               repl_cov = list(cov9 = matrix(rnorm(J * K), J, K),
+                               cov10 = matrix(letters[1:(J * K)], J, K),
+                               cov11 = matrix(rep(c(TRUE, FALSE), J * K / 2), J, K)))
 
-    expect_identical(attributes(suppressWarnings(predict(fit, newdata)))$label$Species,
-                     dimnames(fit@data@y)[[1]])
+  expect_identical(attributes(suppressWarnings(predict(fit, newdata)))$label$Species,
+                   dimnames(fit@data@y)[[1]])
 })
 
 ### Tests for the function output ----------------------------------------------
-test_that("Prediction and addition of attributes for phi works correctly", {
-    N <- 10
+test_that("Prediction and addition of attributes works correctly", {
+  test_array_output <- function(data,
+                                formula = ~ 1,
+                                formula_shared = ~ 1,
+                                test_psi = TRUE,
+                                n.chains = 1,
+                                n.burnin = 0,
+                                n.thin = 1,
+                                n.iter) {
 
-    ## No shared effects, type = "i"
-    fit <- occumb(data = data,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = N,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <- post_effect[, i, ] * list_cov$cov
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## No shared effects, type = "ij"
-    fit <- occumb(data = data, formula_phi = ~ cov5,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-
-    pred_link <- array(dim = c(N, I, J))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J))
-            pred_link[, i, j] <- post_effect[, i, ] %*% list_cov$cov[j, ]
+    if (test_psi) {
+      fit <- occumb(data = data,
+                    formula_phi = formula,
+                    formula_theta = formula,
+                    formula_psi = formula,
+                    formula_phi_shared = formula_shared,
+                    formula_theta_shared = formula_shared,
+                    formula_psi_shared = formula_shared,
+                    n.chains = n.chains,
+                    n.burnin = n.burnin,
+                    n.thin = n.thin,
+                    n.iter = n.iter,
+                    verbose = FALSE)
+    } else {
+      fit <- occumb(data = data,
+                    formula_phi = formula,
+                    formula_theta = formula,
+                    formula_psi = ~ 1,
+                    formula_phi_shared = formula_shared,
+                    formula_theta_shared = formula_shared,
+                    formula_psi_shared = ~ 1,
+                    n.chains = n.chains,
+                    n.burnin = n.burnin,
+                    n.thin = n.thin,
+                    n.iter = n.iter,
+                    verbose = FALSE)
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
+    .test_array_output(fit, "phi", "link",     "quantiles")
+    .test_array_output(fit, "phi", "link",     "mean")
+    .test_array_output(fit, "phi", "link",     "samples")
+    .test_array_output(fit, "phi", "response", "quantiles")
+    .test_array_output(fit, "phi", "response", "mean")
+    .test_array_output(fit, "phi", "response", "samples")
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+    .test_array_output(fit, "theta", "link",     "quantiles")
+    .test_array_output(fit, "theta", "link",     "mean")
+    .test_array_output(fit, "theta", "link",     "samples")
+    .test_array_output(fit, "theta", "response", "quantiles")
+    .test_array_output(fit, "theta", "response", "mean")
+    .test_array_output(fit, "theta", "response", "samples")
 
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+    if (test_psi) {
+      .test_array_output(fit, "psi", "link",     "quantiles")
+      .test_array_output(fit, "psi", "link",     "mean")
+      .test_array_output(fit, "psi", "link",     "samples")
+      .test_array_output(fit, "psi", "response", "quantiles")
+      .test_array_output(fit, "psi", "response", "mean")
+      .test_array_output(fit, "psi", "response", "samples")
+    }
+  }
 
-    expect_equal(pred, ans)
+  .test_array_output <- function(fit, parameter, scale, type) {
 
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
+    test_object_structure <- function(fit, parameter, scale, type) {
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+      pred <- predict(fit, parameter = parameter, scale = scale, type = type)
+      parameter_dimension <- set_parameter_dimension(fit, parameter)
+      dim_ans <- set_dim_ans(type, parameter_dimension)
 
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      checkmate::expect_array(pred)
+      expect_equal(dim(pred), dim_ans)
+    }
 
-    expect_equal(pred, ans)
+    test_object_attributes <- function(fit, parameter, scale, type) {
 
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
+      pred <- predict(fit, parameter = parameter, scale = scale, type = type)
+      parameter_dimension <- set_parameter_dimension(fit, parameter)
+      label_dimension_ans <-
+        set_label_dimension_ans(type, parameter_dimension)
+      label_statistics_ans <- set_label_statistics_ans(type)
 
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+      expect_equal(attributes(pred)$parameter, parameter)
+      expect_equal(attributes(pred)$scale, scale)
+      expect_equal(attributes(pred)$dimension, label_dimension_ans)
 
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (type == "samples") {
+        expect_equal(attributes(pred)$label$Samples, NULL)
+      } else {
+        expect_equal(attributes(pred)$label$Statistics, label_statistics_ans)
+      }
 
-    expect_equal(pred, ans)
+      expect_equal(attributes(pred)$label$Species,
+                   dimnames(fit@data@y)[[1]])
+      if (parameter_dimension != "i") {
+        expect_equal(attributes(pred)$label$Sites,
+                     dimnames(fit@data@y)[[2]])
+      }
+      if (parameter_dimension == "ijk") {
+        expect_equal(attributes(pred)$label$Replicates,
+                     dimnames(fit@data@y)[[3]])
+      }
+    }
 
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
+    test_object_contents <- function(fit, parameter, scale, type) {
 
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+      pred <- predict(fit, parameter = parameter, scale = scale, type = type)
+      pred_without_attributes <- pred |>
+        remove_attributes("parameter") |>
+        remove_attributes("scale") |>
+        remove_attributes("dimension") |>
+        remove_attributes("label")
+      pred_ans <- set_pred_ans(fit, parameter, scale, type)
 
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      expect_equal(pred_without_attributes, pred_ans)
+    }
 
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## No shared effects, type = "ijk"
-    fit <- occumb(data = data, formula_phi = ~ cov9,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-
-    pred_link <- array(dim = c(N, I, J, K))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J)) {
-            for (k in seq_len(K))
-                pred_link[, i, j, k] <- post_effect[, i, ] %*% list_cov$cov[j, k, ]
+    set_dim_ans <- function(type, parameter_dimension) {
+      if (type == "quantiles") {
+        if (parameter_dimension == "i") {
+          return(c(3, I))
         }
+        if (parameter_dimension == "ij") {
+          return(c(3, I, J))
+        }
+        if (parameter_dimension == "ijk") {
+          return(c(3, I, J, K))
+        }
+      }
+
+      if (type == "mean") {
+        if (parameter_dimension == "i") {
+          return(c(1, I))
+        }
+        if (parameter_dimension == "ij") {
+          return(c(1, I, J))
+        }
+        if (parameter_dimension == "ijk") {
+          return(c(1, I, J, K))
+        }
+      }
+
+      if (type == "samples") {
+        if (parameter_dimension == "i") {
+          return(c(N, I))
+        }
+        if (parameter_dimension == "ij") {
+          return(c(N, I, J))
+        }
+        if (parameter_dimension == "ijk") {
+          return(c(N, I, J, K))
+        }
+      }
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "i"
-    fit <- occumb(data = data, formula_phi_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-    post_effect_shared <- get_post_samples(fit, "alpha_shared")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <-
-            post_effect[, i, ] * list_cov$cov +
-            post_effect_shared * list_cov$cov_shared[i, ]
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    fit <- occumb(data = data, formula_phi_shared = ~ cov1 + cov2,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-    post_effect_shared <- get_post_samples(fit, "alpha_shared")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <-
-            post_effect[, i, ] * list_cov$cov +
-            post_effect_shared %*% list_cov$cov_shared[i, ]
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "ij"
-    fit <- occumb(data = data, formula_phi = ~ cov5, formula_phi_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-    post_effect_shared <- get_post_samples(fit, "alpha_shared")
-
-    pred_link <- array(dim = c(N, I, J))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J))
-            pred_link[, i, j] <-
-                post_effect[, i, ] %*% list_cov$cov[j, ] +
-                post_effect_shared * list_cov$cov_shared[i, j, ]
+    set_label_dimension_ans <- function(type, parameter_dimension) {
+      if (type == "samples") {
+        if (parameter_dimension == "i") {
+          return(c("Samples", "Species"))
+        }
+        if (parameter_dimension == "ij") {
+          return(c("Samples", "Species", "Sites"))
+        }
+        if (parameter_dimension == "ijk") {
+          return(c("Samples", "Species", "Sites", "Replicates"))
+        }
+      } else {
+        if (parameter_dimension == "i") {
+          return(c("Statistics", "Species"))
+        }
+        if (parameter_dimension == "ij") {
+          return(c("Statistics", "Species", "Sites"))
+        }
+        if (parameter_dimension == "ijk") {
+          return(c("Statistics", "Species", "Sites", "Replicates"))
+        }
+      }
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
+    set_label_statistics_ans <- function(type) {
+      if (type == "quantiles") {
+        return(c("50%", "2.5%", "97.5%"))
+      }
+      if (type == "mean") {
+        return("mean")
+      }
+    }
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+    remove_attributes <- function(x, attribute) {
+      attr(x, attribute) <- NULL
+      return(x)
+    }
 
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+    set_pred_ans <- function(fit, parameter, scale, type) {
+      pred_ans <- get_pred_link(fit, parameter, scale, type) |>
+        get_pred_ans(fit, parameter, scale, type)
 
-    expect_equal(pred, ans)
+      return(pred_ans)
+    }
 
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
+    get_pred_link <- function(fit, parameter, scale, type) {
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+      parameter_dimension <- set_parameter_dimension(fit, parameter)
+      has_shared_effect   <- set_has_shared_effect(fit, parameter)
+      coefficient         <- set_coefficient(parameter)
+      coefficient_shared  <- set_coefficient_shared(parameter)
+      list_cov            <- get_covariates(fit, parameter)
+      post_effect         <- get_post_samples(fit, coefficient)
+      if (has_shared_effect) {
+        post_effect_shared <- get_post_samples(fit, coefficient_shared)
+      }
 
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (parameter_dimension == "i") {
+        pred_link <- matrix(nrow = N, ncol = I)
 
-    expect_equal(pred, ans)
+        if (!has_shared_effect) {
+          for (i in seq_len(I)) {
+            pred_link[, i] <- post_effect[, i, ] * list_cov$cov
+          }
+        } else {
+          if (length(post_effect_shared) > 1) {
+            for (i in seq_len(I)) {
+              pred_link[, i] <- post_effect[, i, ] * list_cov$cov +
+                post_effect_shared %*% list_cov$cov_shared[i, ]
+            }
+          } else {
+            for (i in seq_len(I)) {
+              pred_link[, i] <- post_effect[, i, ] * list_cov$cov +
+                post_effect_shared * list_cov$cov_shared[i, ]
+            }
+          }
+        }
 
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
+        return(pred_link)
+      }
 
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+      if (parameter_dimension == "ij") {
+        pred_link <- array(dim = c(N, I, J))
 
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+        if (!has_shared_effect) {
+          for (i in seq_len(I)) {
+            for (j in seq_len(J)) {
+              pred_link[, i, j] <- post_effect[, i, ] %*% list_cov$cov[j, ]
+            }
+          }
+        } else {
+          if (length(post_effect_shared) > 1) {
+            for (i in seq_len(I)) {
+              for (j in seq_len(J)) {
+                pred_link[, i, j] <- post_effect[, i, ] %*% list_cov$cov[j, ] +
+                  post_effect_shared %*% list_cov$cov_shared[i, j, ]
+              }
+            }
+          } else {
+            for (i in seq_len(I)) {
+              for (j in seq_len(J)) {
+                pred_link[, i, j] <- post_effect[, i, ] %*% list_cov$cov[j, ] +
+                  post_effect_shared * list_cov$cov_shared[i, j, ]
+              }
+            }
+          }
+        }
 
-    expect_equal(pred, ans)
+        return(pred_link)
+      }
 
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
+      if (parameter_dimension == "ijk") {
+        pred_link <- array(dim = c(N, I, J, K))
 
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "ijk"
-    fit <- occumb(data = data, formula_phi = ~ cov9, formula_phi_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_phi),
-                               formula(fit@occumb_args$formula_phi_shared),
-                               "phi")
-    post_effect <- get_post_samples(fit, "alpha")
-    post_effect_shared <- get_post_samples(fit, "alpha_shared")
-
-    pred_link <- array(dim = c(N, I, J, K))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J)) {
-            for (k in seq_len(K))
-                pred_link[, i, j, k] <-
+        if (!has_shared_effect) {
+          for (i in seq_len(I)) {
+            for (j in seq_len(J)) {
+              for (k in seq_len(K)) {
+                pred_link[, i, j, k] <- post_effect[, i, ] %*% list_cov$cov[j, k, ]
+              }
+            }
+          }
+        } else {
+          if (length(post_effect_shared) > 1) {
+            for (i in seq_len(I)) {
+              for (j in seq_len(J)) {
+                for (k in seq_len(K)) {
+                  pred_link[, i, j, k] <-
+                    post_effect[, i, ] %*% list_cov$cov[j, k, ] +
+                    post_effect_shared %*% list_cov$cov_shared[i, j, k, ]
+                }
+              }
+            }
+          } else {
+            for (i in seq_len(I)) {
+              for (j in seq_len(J)) {
+                for (k in seq_len(K)) {
+                  pred_link[, i, j, k] <-
                     post_effect[, i, ] %*% list_cov$cov[j, k, ] +
                     post_effect_shared * list_cov$cov_shared[i, j, k, ]
+                }
+              }
+            }
+          }
         }
+
+        return(pred_link)
+      }
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "quantiles")
+    get_pred_ans <- function(pred_link, fit, parameter, scale, type) {
 
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+      parameter_dimension <- set_parameter_dimension(fit, parameter)
+      inv_link <- set_inv_link(parameter)
 
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (type == "quantiles") {
+        pred_ans <- apply(pred_link, 2:length(dim(pred_link)),
+                          quantile, probs = c(0.5, 0.025, 0.975))
+        if (scale == "response") {
+          pred_ans <- inv_link(pred_ans)
+        }
 
-    expect_equal(pred, ans)
+        return(pred_ans)
+      }
 
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "quantiles")
+      if (type == "mean") {
+        if (scale == "link") {
+          if (parameter_dimension == "i") {
+            pred_ans <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
+                              c(1, ncol(pred_link)))
+          } else {
+            pred_ans <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
+                              c(1, dim(pred_link)[-1]))
+          }
+        }
+        if (scale == "response") {
+          if (parameter_dimension == "i") {
+            pred_ans <-
+              array(apply(inv_link(pred_link), 2:length(dim(pred_link)), mean),
+                    c(1, ncol(pred_link)))
+          } else {
+            pred_ans <-
+              array(apply(inv_link(pred_link), 2:length(dim(pred_link)), mean),
+                    c(1, dim(pred_link)[-1]))
+          }
+        }
 
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+        return(pred_ans)
+      }
 
-    ans  <- exp(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (type == "samples") {
+        if (scale == "link") {
+          pred_ans <- pred_link
+        }
+        if (scale == "response") {
+          pred_ans <- inv_link(pred_link)
+        }
 
-    expect_equal(pred, ans)
+        return(pred_ans)
+      }
+    }
 
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "mean")
+    set_has_shared_effect <- function(fit, parameter) {
+      eval(parse(text = paste0("get_modargs(fit)$", parameter, "_shared")))
+    }
 
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+    set_coefficient <- function(parameter) {
+      switch(parameter,
+             phi = "alpha",
+             theta = "beta",
+             psi = "gamma")
+    }
 
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+    set_coefficient_shared <- function(parameter) {
+      switch(parameter,
+             phi = "alpha_shared",
+             theta = "beta_shared",
+             psi = "gamma_shared")
+    }
 
-    expect_equal(pred, ans)
+    set_inv_link <- function(parameter) {
+      switch(parameter,
+             phi   = exp,
+             theta = stats::plogis,
+             psi   = stats::plogis)
+    }
 
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "mean")
+    test_object_structure(fit, parameter, scale, type)
+    test_object_attributes(fit, parameter, scale, type)
+    test_object_contents(fit, parameter, scale, type)
+  }
 
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+  ## No shared effects, type = "i"
+  test_array_output(data, n.iter = N)
+  test_array_output(data_unnamed, n.iter = N)
 
-    ans  <- array(apply(exp(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+  ## No shared effects, type = "ij"
+  test_array_output(data, formula = ~ cov5, n.iter = N)
+  test_array_output(data_unnamed, formula = ~ cov5, n.iter = N)
 
-    expect_equal(pred, ans)
+  ## No shared effects, type = "ijk"
+  test_array_output(data, formula = ~ cov9, test_psi = FALSE, n.iter = N)
+  test_array_output(data_unnamed, formula = ~ cov9, test_psi = FALSE, n.iter = N)
 
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "link", type = "samples")
+  ## With shared effects, type = "i"
+  test_array_output(data, formula_shared = ~ cov1, n.iter = N)
+  test_array_output(data_unnamed, formula_shared = ~ cov1, n.iter = N)
 
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+  # With discrete covariates
+  test_array_output(data, formula_shared = ~ cov1 + cov2, n.iter = N)
+  test_array_output(data_unnamed, formula_shared = ~ cov1 + cov2, n.iter = N)
 
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+  ## With shared effects, type = "ij"
+  test_array_output(data, formula = ~ cov5, formula_shared = ~ cov1, n.iter = N)
+  test_array_output(data_unnamed, formula = ~ cov5, formula_shared = ~ cov1,
+                    n.iter = N)
 
-    expect_equal(pred, ans)
+  # With discrete covariates
+  test_array_output(data, formula = ~ cov5, formula_shared = ~ cov1 + cov2,
+                    n.iter = N)
+  test_array_output(data_unnamed, formula = ~ cov5, formula_shared = ~ cov1 + cov2,
+                    n.iter = N)
 
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "phi", scale = "response", type = "samples")
+  ## With shared effects, type = "ijk"
+  test_array_output(data, formula = ~ cov9, formula_shared = ~ cov1,
+                    test_psi = FALSE, n.iter = N)
+  test_array_output(data_unnamed, formula = ~ cov9, formula_shared = ~ cov1,
+                    test_psi = FALSE, n.iter = N)
 
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- exp(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
+  # With discrete covariates
+  test_array_output(data, formula = ~ cov9, formula_shared = ~ cov1 + cov2,
+                    test_psi = FALSE, n.iter = N)
+  test_array_output(data_unnamed, formula = ~ cov9, formula_shared = ~ cov1 + cov2,
+                    test_psi = FALSE, n.iter = N)
 })
 
-test_that("Prediction and addition of attributes for theta works correctly", {
-    N <- 10
 
-    ## No shared effects, type = "i"
-    fit <- occumb(data = data,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = N,
-                  verbose = FALSE)
+test_that("Option for dataframe output works", {
 
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
+  test_dataframe_output <- function(data,
+                                    formula = ~ 1,
+                                    formula_shared = ~ 1,
+                                    test_psi = TRUE,
+                                    n.chains = 1,
+                                    n.burnin = 0,
+                                    n.thin = 1,
+                                    n.iter) {
 
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <- post_effect[, i, ] * list_cov$cov
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## No shared effects, type = "ij"
-    fit <- occumb(data = data, formula_theta = ~ cov5,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
-
-    pred_link <- array(dim = c(N, I, J))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J))
-            pred_link[, i, j] <- post_effect[, i, ] %*% list_cov$cov[j, ]
+    if (test_psi) {
+      fit <- occumb(data = data,
+                    formula_phi = formula,
+                    formula_theta = formula,
+                    formula_psi = formula,
+                    formula_phi_shared = formula_shared,
+                    formula_theta_shared = formula_shared,
+                    formula_psi_shared = formula_shared,
+                    n.chains = n.chains,
+                    n.burnin = n.burnin,
+                    n.thin = n.thin,
+                    n.iter = n.iter,
+                    verbose = FALSE)
+    } else {
+      fit <- occumb(data = data,
+                    formula_phi = formula,
+                    formula_theta = formula,
+                    formula_psi = ~ 1,
+                    formula_phi_shared = formula_shared,
+                    formula_theta_shared = formula_shared,
+                    formula_psi_shared = ~ 1,
+                    n.chains = n.chains,
+                    n.burnin = n.burnin,
+                    n.thin = n.thin,
+                    n.iter = n.iter,
+                    verbose = FALSE)
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
+    .test_dataframe_output(fit, "phi", "link",     "quantiles")
+    .test_dataframe_output(fit, "phi", "link",     "mean")
+    .test_dataframe_output(fit, "phi", "link",     "samples")
+    .test_dataframe_output(fit, "phi", "response", "quantiles")
+    .test_dataframe_output(fit, "phi", "response", "mean")
+    .test_dataframe_output(fit, "phi", "response", "samples")
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+    .test_dataframe_output(fit, "theta", "link",     "quantiles")
+    .test_dataframe_output(fit, "theta", "link",     "mean")
+    .test_dataframe_output(fit, "theta", "link",     "samples")
+    .test_dataframe_output(fit, "theta", "response", "quantiles")
+    .test_dataframe_output(fit, "theta", "response", "mean")
+    .test_dataframe_output(fit, "theta", "response", "samples")
 
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
+    if (test_psi) {
+      .test_dataframe_output(fit, "psi", "link",     "quantiles")
+      .test_dataframe_output(fit, "psi", "link",     "mean")
+      .test_dataframe_output(fit, "psi", "link",     "samples")
+      .test_dataframe_output(fit, "psi", "response", "quantiles")
+      .test_dataframe_output(fit, "psi", "response", "mean")
+      .test_dataframe_output(fit, "psi", "response", "samples")
+    }
+  }
 
 
-    ## No shared effects, type = "ijk"
-    fit <- occumb(data = data, formula_theta = ~ cov9,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
+  .test_dataframe_output <- function(fit, parameter, scale, type) {
 
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
+    test_object_structure <- function(fit, parameter, scale, type) {
+      pred <-
+        predict(fit, parameter = parameter, scale = scale, type = type,
+                output_dataframe = TRUE)
+      ans_structure <- set_ans_structure(fit, parameter, type)
 
-    pred_link <- array(dim = c(N, I, J, K))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J)) {
-            for (k in seq_len(K))
-                pred_link[, i, j, k] <- post_effect[, i, ] %*% list_cov$cov[j, k, ]
-        }
+      checkmate::expect_data_frame(pred,
+                                   nrows = ans_structure$nrows,
+                                   ncols = ans_structure$ncols)
+      expect_identical(colnames(pred), ans_structure$colnames)
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "i"
-    fit <- occumb(data = data, formula_theta_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
-    post_effect_shared <- get_post_samples(fit, "beta_shared")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <-
-            post_effect[, i, ] * list_cov$cov +
-            post_effect_shared * list_cov$cov_shared[i, ]
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    fit <- occumb(data = data, formula_theta_shared = ~ cov1 + cov2,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
-    post_effect_shared <- get_post_samples(fit, "beta_shared")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <-
-            post_effect[, i, ] * list_cov$cov +
-            post_effect_shared %*% list_cov$cov_shared[i, ]
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "ij"
-    fit <- occumb(data = data, formula_theta = ~ cov5, formula_theta_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
-    post_effect_shared <- get_post_samples(fit, "beta_shared")
-
-    pred_link <- array(dim = c(N, I, J))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J))
-            pred_link[, i, j] <-
-                post_effect[, i, ] %*% list_cov$cov[j, ] +
-                post_effect_shared * list_cov$cov_shared[i, j, ]
+    test_object_contents <- function(fit, parameter, scale, type) {
+      test_dimension_labels(fit, parameter, scale, type)
+      test_remaining(fit, parameter, scale, type)
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
+    test_dimension_labels <- function(fit, parameter, scale, type) {
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+      pred <-
+        predict(fit, parameter = parameter, scale = scale, type = type,
+                output_dataframe = TRUE)
+      pred_array <-
+        predict(fit, parameter = parameter, scale = scale, type = type,
+                output_dataframe = FALSE)
 
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      parameter_dimension <- set_parameter_dimension(fit, parameter)
+      label_dim <- set_label_dim(pred_array)
+      multiplier_type <- set_multiplier_type(type)
 
-    expect_equal(pred, ans)
+      if (parameter_dimension == "i") {
+        labels_ans <- expand.grid(seq_len(multiplier_type),
+                                  label_dim$spec)
 
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
+        Species_ans <- factor(labels_ans[, 2])
+        if (!is.null(attributes(pred_array)$label$Species))
+          levels(Species_ans) <- attributes(pred_array)$label$Species
 
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+        expect_identical(pred$Species, Species_ans)
+      }
 
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (parameter_dimension == "ij") {
+        labels_ans <- expand.grid(seq_len(multiplier_type),
+                                  label_dim$spec,
+                                  label_dim$site)
 
-    expect_equal(pred, ans)
+        Species_ans <- factor(labels_ans[, 2])
+        if (!is.null(attributes(pred_array)$label$Species))
+          levels(Species_ans) <- attributes(pred_array)$label$Species
 
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
+        expect_identical(pred$Species, Species_ans)
 
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+        Sites_ans <- factor(labels_ans[, 3])
+        if (!is.null(attributes(pred_array)$label$Sites))
+          levels(Sites_ans) <- attributes(pred_array)$label$Sites
 
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+        expect_identical(pred$Sites, Sites_ans)
+      }
 
-    expect_equal(pred, ans)
+      if (parameter_dimension == "ijk") {
+        labels_ans <- expand.grid(seq_len(multiplier_type),
+                                  label_dim$spec,
+                                  label_dim$site,
+                                  label_dim$repl)
 
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
+        Species_ans <- factor(labels_ans[, 2])
+        if (!is.null(attributes(pred_array)$label$Species))
+          levels(Species_ans) <- attributes(pred_array)$label$Species
 
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
+        expect_identical(pred$Species, Species_ans)
 
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+        Sites_ans <- factor(labels_ans[, 3])
+        if (!is.null(attributes(pred_array)$label$Sites))
+          levels(Sites_ans) <- attributes(pred_array)$label$Sites
 
-    expect_equal(pred, ans)
+        expect_identical(pred$Sites, Sites_ans)
 
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
+        Replicates_ans <- factor(labels_ans[, 4])
+        if (!is.null(attributes(pred_array)$label$Replicates))
+          levels(Replicates_ans) <- attributes(pred_array)$label$Replicates
 
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "ijk"
-    fit <- occumb(data = data, formula_theta = ~ cov9, formula_theta_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_theta),
-                               formula(fit@occumb_args$formula_theta_shared),
-                               "theta")
-    post_effect <- get_post_samples(fit, "beta")
-    post_effect_shared <- get_post_samples(fit, "beta_shared")
-
-    pred_link <- array(dim = c(N, I, J, K))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J)) {
-            for (k in seq_len(K))
-                pred_link[, i, j, k] <-
-                    post_effect[, i, ] %*% list_cov$cov[j, k, ] +
-                    post_effect_shared * list_cov$cov_shared[i, j, k, ]
-        }
+        expect_identical(pred$Replicates, Replicates_ans)
+      }
     }
 
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "quantiles")
+    test_remaining <- function(fit, parameter, scale, type) {
+      pred <-
+        predict(fit, parameter = parameter, scale = scale, type = type,
+                output_dataframe = TRUE)
+      pred_array <-
+        predict(fit, parameter = parameter, scale = scale, type = type,
+                output_dataframe = FALSE)
 
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+      ans_contents <- set_ans_contents(fit, parameter, scale, type)
 
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      expect_identical(pred$Parameter, ans_contents$Parameter)
+      expect_identical(pred$Scale, ans_contents$Scale)
+      expect_identical(pred[[3]], ans_contents$Statistics_Samples)
+      expect_identical(pred$Value, c(pred_array))
+    }
 
-    expect_equal(pred, ans)
+    set_ans_structure <- function(fit, parameter, type) {
+      ans_structure <- list(
+        nrows    = set_nrows_ans(fit, parameter, type),
+        ncols    = set_ncols_ans(fit, parameter, type),
+        colnames = set_colnames_ans(fit, parameter, type)
+      )
+      return(ans_structure)
+    }
 
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "quantiles")
+    set_nrows_ans <- function(fit, parameter, type) {
+      multiplier_type <- set_multiplier_type(type)
+      multiplier_parameter_dimension <-
+        set_multiplier_parameter_dimension(fit, parameter)
 
-    expect_equal(dim(pred), c(3, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+      return(multiplier_type * multiplier_parameter_dimension)
+    }
 
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+    set_multiplier_type <- function(type) {
+      switch(type,
+             quantiles = 3,
+             mean = 1,
+             samples = N)
+    }
 
-    expect_equal(pred, ans)
+    set_multiplier_parameter_dimension <- function(fit, parameter) {
+      fit |>
+        set_parameter_dimension(parameter) |>
+        switch(i = dim(get_data(fit, "y"))[1],
+               ij = prod(dim(get_data(fit, "y"))[1:2]),
+               ijk = prod(dim(get_data(fit, "y"))[1:3]))
+    }
 
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "mean")
+    set_ncols_ans <- function(fit, parameter, type) {
+      fit |>
+        set_parameter_dimension(parameter) |>
+        switch(i   = 5,
+               ij  = 6,
+               ijk = 7)
+    }
 
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+    set_colnames_ans <- function(fit, parameter, type) {
+      colnames_dimension <- set_colnames_dimension(fit, parameter)
 
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (type == "samples") {
+        c(c("Parameter", "Scale", "Samples"), colnames_dimension, "Value")
+      } else {
+        c(c("Parameter", "Scale", "Statistics"), colnames_dimension, "Value")
+      }
+    }
 
-    expect_equal(pred, ans)
+    set_colnames_dimension <- function(fit, parameter) {
+      fit |>
+        set_parameter_dimension(parameter) |>
+        switch(i   = c("Species"),
+               ij  = c("Species", "Sites"),
+               ijk = c("Species", "Sites", "Replicates"))
+    }
 
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "mean")
+    set_label_dim <- function(pred_array) {
 
-    expect_equal(dim(pred), c(1, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Statistics", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+      label_dim <- list()
 
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      if (is.null(attributes(pred_array)$label$Species)) {
+        label_dim$spec <- seq_len(I)
+      } else {
+        label_dim$spec <- attributes(pred_array)$label$Species
+      }
 
-    expect_equal(pred, ans)
+      if (is.null(attributes(pred_array)$label$Sites)) {
+        label_dim$site <- seq_len(J)
+      } else {
+        label_dim$site <- attributes(pred_array)$label$Sites
+      }
 
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "link", type = "samples")
+      if (is.null(attributes(pred_array)$label$Replicates)) {
+        label_dim$repl <- seq_len(K)
+      } else {
+        label_dim$repl <- attributes(pred_array)$label$Replicates
+      }
 
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+      return(label_dim)
+    }
 
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+    set_ans_contents <- function(fit, parameter, scale, type) {
+      ans_contents <- list(
+        Parameter          = set_Parameter_ans(fit, parameter, type),
+        Scale              = set_Scale_ans(fit, parameter, scale, type),
+        Statistics_Samples = set_Statistics_Samples_ans(fit, parameter, scale, type)
+      )
+      return(ans_contents)
+    }
 
-    expect_equal(pred, ans)
+    set_Parameter_ans <- function(fit, parameter, type) {
+      ans_structure <- set_ans_structure(fit, parameter, type)
+      Parameter_ans <- factor(rep(parameter, ans_structure$nrows))
 
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "theta", scale = "response", type = "samples")
+      return(Parameter_ans)
+    }
 
-    expect_equal(dim(pred), c(N, I, J, K))
-    expect_equal(attributes(pred)$dimension,
-                 c("Samples", "Species", "Sites", "Replicates"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-    expect_equal(attributes(pred)$label$Replicates, dimnames(fit@data@y)[[3]])
+    set_Scale_ans <- function(fit, parameter, scale, type) {
+      ans_structure <- set_ans_structure(fit, parameter, type)
+      Scale_ans     <- factor(rep(scale, ans_structure$nrows))
 
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
+      return(Scale_ans)
+    }
 
-    expect_equal(pred, ans)
+    set_Statistics_Samples_ans <- function(fit, parameter, scale, type) {
+      pred_array <-
+        predict(fit, parameter = parameter, scale = scale, type = type,
+                output_dataframe = FALSE)
+
+      multiplier_parameter_dimension <-
+        set_multiplier_parameter_dimension(fit, parameter)
+
+      if (type == "samples") {
+        factor(rep(seq_len(N), multiplier_parameter_dimension))
+      } else {
+        factor(rep(attributes(pred_array)$label$Statistics,
+                   multiplier_parameter_dimension),
+               levels = attributes(pred_array)$label$Statistics)
+      }
+    }
+
+    test_object_structure(fit, parameter, scale, type)
+    test_object_contents(fit, parameter, scale, type)
+  }
+
+  ## type = "i"
+  test_dataframe_output(data, n.iter = N)
+  test_dataframe_output(data_unnamed, n.iter = N)
+
+  ## type = "ij"
+  test_dataframe_output(data, formula = ~ cov5, n.iter = N)
+  test_dataframe_output(data_unnamed, formula = ~ cov5, n.iter = N)
+
+  ## type = "ijk"
+  test_dataframe_output(data, formula = ~ cov9, test_psi = FALSE, n.iter = N)
+  test_dataframe_output(data_unnamed, formula = ~ cov9, test_psi = FALSE,
+                        n.iter = N)
 })
-
-test_that("Prediction and addition of attributes for psi works correctly", {
-    N <- 10
-
-    ## No shared effects, type = "i"
-    fit <- occumb(data = data,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = N,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_psi),
-                               formula(fit@occumb_args$formula_psi_shared),
-                               "psi")
-    post_effect <- get_post_samples(fit, "gamma")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <- post_effect[, i, ] * list_cov$cov
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## No shared effects, type = "ij"
-    fit <- occumb(data = data, formula_psi = ~ cov5,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_psi),
-                               formula(fit@occumb_args$formula_psi_shared),
-                               "psi")
-    post_effect <- get_post_samples(fit, "gamma")
-
-    pred_link <- array(dim = c(N, I, J))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J))
-            pred_link[, i, j] <- post_effect[, i, ] %*% list_cov$cov[j, ]
-    }
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "i"
-    fit <- occumb(data = data, formula_psi_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_psi),
-                               formula(fit@occumb_args$formula_psi_shared),
-                               "psi")
-    post_effect <- get_post_samples(fit, "gamma")
-    post_effect_shared <- get_post_samples(fit, "gamma_shared")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <-
-            post_effect[, i, ] * list_cov$cov +
-            post_effect_shared * list_cov$cov_shared[i, ]
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    fit <- occumb(data = data, formula_psi_shared = ~ cov1 + cov2,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_psi),
-                               formula(fit@occumb_args$formula_psi_shared),
-                               "psi")
-    post_effect <- get_post_samples(fit, "gamma")
-    post_effect_shared <- get_post_samples(fit, "gamma_shared")
-
-    pred_link <- matrix(nrow = N, ncol = I)
-    for (i in seq_len(I))
-        pred_link[, i] <-
-            post_effect[, i, ] * list_cov$cov +
-            post_effect_shared %*% list_cov$cov_shared[i, ]
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean), c(1, ncol(pred_link)))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-
-    ## With shared effects, type = "ij"
-    fit <- occumb(data = data, formula_psi = ~ cov5, formula_psi_shared = ~ cov1,
-                  n.chains = 1, n.burnin = 0, n.thin = 1, n.iter = 10,
-                  verbose = FALSE)
-
-    list_cov <- set_covariates(data,
-                               formula(fit@occumb_args$formula_psi),
-                               formula(fit@occumb_args$formula_psi_shared),
-                               "psi")
-    post_effect <- get_post_samples(fit, "gamma")
-    post_effect_shared <- get_post_samples(fit, "gamma_shared")
-
-    pred_link <- array(dim = c(N, I, J))
-    for (i in seq_len(I)) {
-        for (j in seq_len(J))
-            pred_link[, i, j] <-
-                post_effect[, i, ] %*% list_cov$cov[j, ] +
-                post_effect_shared * list_cov$cov_shared[i, j, ]
-    }
-
-    # 1. scale = link, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- apply(pred_link, 2:length(dim(pred_link)),
-                  quantile, probs = c(0.5, 0.025, 0.975))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 2. scale = response, type = quantiles
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "quantiles")
-
-    expect_equal(dim(pred), c(3, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, c("50%", "2.5%", "97.5%"))
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(ans)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 3. scale = link, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(pred_link, 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 4. scale = response, type = mean
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "mean")
-
-    expect_equal(dim(pred), c(1, I, J))
-    expect_equal(attributes(pred)$dimension, c("Statistics", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Statistics, "mean")
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- array(apply(plogis(pred_link), 2:length(dim(pred_link)), mean),
-                  c(1, dim(pred_link)[-1]))
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 5. scale = link, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "link", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- pred_link
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-
-    # 6. scale = response, type = samples
-    pred <- predict(fit, parameter = "psi", scale = "response", type = "samples")
-
-    expect_equal(dim(pred), c(N, I, J))
-    expect_equal(attributes(pred)$dimension, c("Samples", "Species", "Sites"))
-    expect_equal(attributes(pred)$label$Samples, NULL)
-    expect_equal(attributes(pred)$label$Species, dimnames(fit@data@y)[[1]])
-    expect_equal(attributes(pred)$label$Sites, dimnames(fit@data@y)[[2]])
-
-    ans  <- plogis(pred_link)
-    attr(pred, "parameter") <- attr(pred, "scale") <- 
-    attr(pred, "dimension") <- attr(pred, "label") <- NULL
-
-    expect_equal(pred, ans)
-})
-
