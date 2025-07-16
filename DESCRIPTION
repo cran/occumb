@@ -1,6 +1,6 @@
 Package: occumb
 Title: Site Occupancy Modeling for Environmental DNA Metabarcoding
-Version: 1.2.0
+Version: 1.2.1
 Authors@R: c(
     person("Keiichi", "Fukaya", , "fukayak99@gmail.com", role = c("aut", "cre")),
     person("Ken", "Kellner", role = "cph",
@@ -12,7 +12,7 @@ Description: Fits community site occupancy models to environmental DNA
     Model fitting results can be used to evaluate and compare the effectiveness
     of species detection to find an efficient survey design.
     Reference: Fukaya et al. (2022) <doi:10.1111/2041-210X.13732>,
-    Fukaya and Hasebe (2025) <doi:10.1101/2025.01.09.632116>.
+    Fukaya and Hasebe (2025) <doi:10.1002/1438-390X.12219>.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
@@ -32,10 +32,10 @@ SystemRequirements: JAGS (http://mcmc-jags.sourceforge.net)
 BugReports: https://github.com/fukayak/occumb/issues
 Language: en-US
 NeedsCompilation: no
-Packaged: 2025-05-23 12:09:44 UTC; kfukaya
+Packaged: 2025-07-16 06:50:05 UTC; kfukaya
 Author: Keiichi Fukaya [aut, cre],
   Ken Kellner [cph] (summary method for occumbFit class),
   Mika Takahashi [aut]
 Maintainer: Keiichi Fukaya <fukayak99@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-05-24 15:40:02 UTC
+Date/Publication: 2025-07-16 09:30:09 UTC
