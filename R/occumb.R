@@ -4,6 +4,7 @@ NULL
 # Class for model-fit results of occumb
 setClass("occumbFit", slots = c(fit = "jagsUI",
                                 data = "occumbData",
+                                engine = "character",
                                 occumb_args = "list"))
 
 #' @title Model-fitting function.
@@ -66,14 +67,11 @@ setClass("occumbFit", slots = c(fit = "jagsUI",
 #'  \code{ocumbData()}; see the document of \code{\link{occumbData}()}.
 #'
 #'  The model is fit using the \code{\link[jagsUI]{jags}()} function of the
-#'  \href{https://cran.r-project.org/package=jagsUI}{jagsUI} package, where
+#'  \href{https://cran.r-project.org/package=jagsUI}{jagsUI} package (when
+#'  \code{engine = “JAGS”}) or the \href{https://cran.r-project.org/package=nimble}{nimble}
+#'  package (when \code{engine = “NIMBLE”}), where
 #'  Markov chain Monte Carlo (MCMC) methods are used to
 #'  obtain posterior samples of the parameters and latent variables.
-#'  Arguments \code{n.chains}, \code{n.adapt}, \code{n.burnin}, \code{n.thin},
-#'  \code{n.iter}, and \code{parallel} are passed on to arguments of the
-#'  same name in the \code{\link[jagsUI]{jags}()} function.
-#'  See the document of \href{https://cran.r-project.org/package=jagsUI}{jagsUI}'s
-#'  \code{\link[jagsUI]{jags}()} function for details.
 #'  A set of random initial values is used to perform an MCMC run.
 #' @param formula_phi A right-hand side formula describing species-specific
 #'        effects of sequence relative dominance (\eqn{\phi}).
@@ -99,11 +97,34 @@ setClass("occumbFit", slots = c(fit = "jagsUI",
 #' @param data A dataset supplied as an \code{\link{occumbData}} class object.
 #' @param n.chains Number of Markov chains to run.
 #' @param n.adapt Number of iterations to run in the JAGS adaptive phase.
+#'        Ignored when \code{engine = "NIMBLE"}.
 #' @param n.burnin Number of iterations at the beginning of the chain to discard.
 #' @param n.thin Thinning rate. Must be a positive integer.
 #' @param n.iter Total number of iterations per chain (including burn-in).
 #' @param parallel If TRUE, run MCMC chains in parallel on multiple CPU cores.
-#' @param ... Additional arguments passed to \code{\link[jagsUI]{jags}()} function.
+#' @param engine Character string specifying the MCMC backend used for model
+#'   fitting. Either `"JAGS"` (default; via \code{\link[jagsUI]{jags}()}) or
+#'   `"NIMBLE"` (via the \pkg{nimble} package).
+#' @param ... Additional arguments passed to the MCMC engine function.
+#'   When \code{engine = "JAGS"}, these are passed to
+#'   \code{\link[jagsUI]{jags}()}.
+#'   When \code{engine = "NIMBLE"}, the following arguments are accepted:
+#'   \describe{
+#'     \item{\code{n.cores}}{The number of cores used when \code{parallel = TRUE}.
+#'       Defaults to \code{parallel::detectCores() - 1} (minimum 1), capped at
+#'       \code{n.chains}.}
+#'     \item{\code{seed}}{Random seed control for MCMC chains.
+#'       If \code{TRUE}, chain \eqn{i} is seeded with \eqn{i}.
+#'       If a single number, chain \eqn{i} is seeded with \code{seed + i - 1}.
+#'       If a numeric vector of length \code{n.chains}, each element is used
+#'       as the seed for the corresponding chain.
+#'       If \code{FALSE} or unspecified (default), random seeds are generated
+#'       automatically.}
+#'     \item{\code{store.data}}{Logical; if \code{TRUE}, store the input data
+#'       and initial values in the returned object. Defaults to \code{FALSE}.}
+#'     \item{\code{verbose}}{Logical; controls NIMBLE's verbosity.
+#'       If unspecified (default), NIMBLE's own default settings are used.}
+#'   }
 #' @return  An S4 object of the \code{occumbFit} class containing the results of
 #'          the model fitting and the supplied dataset.
 #' @section References:
@@ -162,9 +183,11 @@ occumb <- function(formula_phi = ~ 1,
                    n.thin = 10,
                    n.iter = 20000,
                    parallel = FALSE,
+                   engine = c("JAGS", "NIMBLE"),
                    ...) {
-
+  
   # Validate arguments
+  engine <- match.arg(engine)
   check_args_occumb(data, formula_phi, formula_theta, formula_psi,
                     formula_phi_shared, formula_theta_shared,
                     formula_psi_shared, prior_prec, prior_ulim)
@@ -192,25 +215,53 @@ occumb <- function(formula_phi = ~ 1,
                                  margs$theta_shared,
                                  margs$psi_shared)
 
-  # Write model file
-  model <- tempfile()
-  writeLines(write_jags_model(margs$phi, margs$theta, margs$psi,
-                              margs$phi_shared,
-                              margs$theta_shared,
-                              margs$psi_shared), model)
+  if (engine == "JAGS") {
+    # Write model file
+    model <- tempfile()
+    writeLines(write_jags_model(margs$phi, margs$theta, margs$psi,
+                                margs$phi_shared,
+                                margs$theta_shared,
+                                margs$psi_shared), model)
+    
+    # Run MCMC in JAGS
+    fit <- jagsUI::jags(dat, inits, params, model,
+                        n.chains = n.chains,
+                        n.adapt  = n.adapt,
+                        n.iter   = n.iter,
+                        n.burnin = n.burnin,
+                        n.thin   = n.thin,
+                        parallel = parallel, ...)
+  } else { # NIMBLE
+    # Write model file
+    M_cov <- lapply(margs[c("m_phi", "m_theta", "m_psi")], length)
+    M_cov_shared <- margs[c("M_phi_shared", "M_theta_shared", "M_psi_shared")]
+    names(M_cov_shared) <- c("M_phi_shared", "M_theta_shared", "M_psi_shared")
+    model_code <- write_nimble_model(margs$phi, margs$theta, margs$psi,
+                                     margs$phi_shared,
+                                     margs$theta_shared,
+                                     margs$psi_shared,
+                                     M_cov_phi          = M_cov$m_phi,
+                                     M_cov_phi_shared   = M_cov_shared$M_phi_shared,
+                                     M_cov_theta        = M_cov$m_theta,
+                                     M_cov_theta_shared = M_cov_shared$M_theta_shared,
+                                     M_cov_psi          = M_cov$m_psi,
+                                     M_cov_psi_shared   = M_cov_shared$M_psi_shared)
+    model_file <- tempfile()
+    writeLines(model_code, model_file)
 
-  # Run MCMC in JAGS
-  fit <- jagsUI::jags(dat, inits, params, model,
+    # Run MCMC in NIMBLE
+    fit <- run_nimble(dat, const, inits, params, model_code, model_file,
                       n.chains = n.chains,
                       n.adapt  = n.adapt,
                       n.iter   = n.iter,
                       n.burnin = n.burnin,
                       n.thin   = n.thin,
                       parallel = parallel, ...)
-
+  }
+  
   # Output
   out <- methods::new(
-    "occumbFit", fit = fit, data = data,
+    "occumbFit", fit = fit, data = data, engine = tolower(engine),
     occumb_args = list(
       formula_phi          = paste(as.character(formula_phi),
                                    collapse = " "),
@@ -228,6 +279,7 @@ occumb <- function(formula_phi = ~ 1,
       prior_ulim           = prior_ulim
     )
   )
+  
   out
 }
 

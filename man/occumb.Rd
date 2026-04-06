@@ -20,6 +20,7 @@ occumb(
   n.thin = 10,
   n.iter = 20000,
   parallel = FALSE,
+  engine = c("JAGS", "NIMBLE"),
   ...
 )
 }
@@ -57,7 +58,8 @@ standard deviation of species-specific parameters.}
 
 \item{n.chains}{Number of Markov chains to run.}
 
-\item{n.adapt}{Number of iterations to run in the JAGS adaptive phase.}
+\item{n.adapt}{Number of iterations to run in the JAGS adaptive phase.
+Ignored when \code{engine = "NIMBLE"}.}
 
 \item{n.burnin}{Number of iterations at the beginning of the chain to discard.}
 
@@ -67,7 +69,30 @@ standard deviation of species-specific parameters.}
 
 \item{parallel}{If TRUE, run MCMC chains in parallel on multiple CPU cores.}
 
-\item{...}{Additional arguments passed to \code{\link[jagsUI]{jags}()} function.}
+\item{engine}{Character string specifying the MCMC backend used for model
+fitting. Either \code{"JAGS"} (default; via \code{\link[jagsUI]{jags}()}) or
+\code{"NIMBLE"} (via the \pkg{nimble} package).}
+
+\item{...}{Additional arguments passed to the MCMC engine function.
+When \code{engine = "JAGS"}, these are passed to
+\code{\link[jagsUI]{jags}()}.
+When \code{engine = "NIMBLE"}, the following arguments are accepted:
+\describe{
+\item{\code{n.cores}}{The number of cores used when \code{parallel = TRUE}.
+Defaults to \code{parallel::detectCores() - 1} (minimum 1), capped at
+\code{n.chains}.}
+\item{\code{seed}}{Random seed control for MCMC chains.
+If \code{TRUE}, chain \eqn{i} is seeded with \eqn{i}.
+If a single number, chain \eqn{i} is seeded with \code{seed + i - 1}.
+If a numeric vector of length \code{n.chains}, each element is used
+as the seed for the corresponding chain.
+If \code{FALSE} or unspecified (default), random seeds are generated
+automatically.}
+\item{\code{store.data}}{Logical; if \code{TRUE}, store the input data
+and initial values in the returned object. Defaults to \code{FALSE}.}
+\item{\code{verbose}}{Logical; controls NIMBLE's verbosity.
+If unspecified (default), NIMBLE's own default settings are used.}
+}}
 }
 \value{
 An S4 object of the \code{occumbFit} class containing the results of
@@ -134,14 +159,11 @@ The \code{data} argument requires a dataset object to be generated using
 \code{ocumbData()}; see the document of \code{\link{occumbData}()}.
 
 The model is fit using the \code{\link[jagsUI]{jags}()} function of the
-\href{https://cran.r-project.org/package=jagsUI}{jagsUI} package, where
+\href{https://cran.r-project.org/package=jagsUI}{jagsUI} package (when
+\code{engine = “JAGS”}) or the \href{https://cran.r-project.org/package=nimble}{nimble}
+package (when \code{engine = “NIMBLE”}), where
 Markov chain Monte Carlo (MCMC) methods are used to
 obtain posterior samples of the parameters and latent variables.
-Arguments \code{n.chains}, \code{n.adapt}, \code{n.burnin}, \code{n.thin},
-\code{n.iter}, and \code{parallel} are passed on to arguments of the
-same name in the \code{\link[jagsUI]{jags}()} function.
-See the document of \href{https://cran.r-project.org/package=jagsUI}{jagsUI}'s
-\code{\link[jagsUI]{jags}()} function for details.
 A set of random initial values is used to perform an MCMC run.
 }
 \section{References}{

@@ -411,9 +411,11 @@ follows:</p>
 <p>This model fitting can take approximately one hour. Given that
 <code>occumb()</code> fits a class of complex hierarchical models with
 many parameters and unknown variables, it may require, depending on the
-dataset size, a long time and/or a lot of memory for model fitting.
-Setting <code>parallel = TRUE</code> is recommended for faster model
-fitting through parallel computations.</p>
+dataset size, a long time and/or a lot of memory for model fitting. For
+faster model fitting, users are encouraged to set
+<code>parallel = TRUE</code> to enable parallel computations and
+<code>engine = &quot;NIMBLE&quot;</code> to use the NIMBLE MCMC engine (see
+<code>vignette(&quot;mcmc_engine_options&quot;)</code>).</p>
 <p>A model incorporating species and site covariates from the
 <code>fish</code> dataset can be fitted as follows:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fit1 <span class="ot">&lt;-</span> <span class="fu">occumb</span>(</span>
